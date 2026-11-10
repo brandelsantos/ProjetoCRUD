@@ -1,0 +1,15 @@
+services:
+  crudstarter:
+    image: postgres:16
+    container_name:  starter_crud
+    environment:
+      PORSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: crudstarter9
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
+  
