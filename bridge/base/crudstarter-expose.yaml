@@ -1,0 +1,18 @@
+#! crudstarter-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: crudstarter
+    namespace: projetocrud
+    labels:
+        com.docker.compose.project: projetocrud
+        com.docker.compose.service: crudstarter
+spec:
+    selector:
+        com.docker.compose.project: projetocrud
+        com.docker.compose.service: crudstarter
+    ports:
+        - name: crudstarte-5432
+          port: 5432
+          targetPort: crudstarte-5432

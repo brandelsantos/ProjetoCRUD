@@ -1,0 +1,9 @@
+#! crudstarter-pgdata-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: crudstarter-pgdata
+    namespace: projetocrud
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

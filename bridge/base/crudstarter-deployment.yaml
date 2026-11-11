@@ -1,0 +1,46 @@
+#! crudstarter-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: crudstarter
+    namespace: projetocrud
+    labels:
+        com.docker.compose.project: projetocrud
+        com.docker.compose.service: crudstarter
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: projetocrud
+            com.docker.compose.service: crudstarter
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: projetocrud
+                com.docker.compose.service: crudstarter
+                com.docker.compose.network.default: "true"
+        spec:
+            containers:
+                - name: starter-crud
+                  image: postgres:16
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: PORSTGRES_USER
+                      value: "postgres"
+                    - name: POSTGRES_DB
+                      value: "crudstarter9"
+                    - name: POSTGRES_PASSWORD
+                      value: "1234"
+                  ports:
+                    - name: crudstarte-5432
+                      containerPort: 5432
+                  volumeMounts:
+                    - name: var-lib-postgresql-data
+                      mountPath: /var/lib/postgresql/data
+            volumes:
+                - name: var-lib-postgresql-data
+                  persistentVolumeClaim:
+                    claimName: crudstarter-pgdata

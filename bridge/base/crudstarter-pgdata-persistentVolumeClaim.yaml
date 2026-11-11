@@ -1,0 +1,18 @@
+#! crudstarter-pgdata-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: crudstarter-pgdata
+    namespace: projetocrud
+    labels:
+        com.docker.compose.service: crudstarter
+        com.docker.compose.volume: pgdata
+spec:
+    accessModes:
+        # TODO would need to check which services use this volume
+        - ReadWriteOnce
+    volumeMode: Filesystem
+    resources:
+        requests:
+            storage: 100Mi
