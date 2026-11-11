@@ -4,6 +4,6 @@ Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"
 Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$PSScriptRoot\start-frontend.ps1`""
 
 
-/* PARA INICIAR TODO ARQUIVO USAR        (git pull)
+/* PARA INICIAR TODO ARQUIVO USAR        (git pull)     */
 /* PARA INICIAR TODO ARQUIVO USAR        (     .\.git\Start-tudo.ps1     )                         */  
 
