@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react'
 
+type Pessoa = {
+  id: number
+  nome: string
+  email: string
+}
+
 export default function App() {
   const [pessoas, setPessoas] = useState<any[]>([])
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
+  const [editandoId, setEditandoId] = useState<number | null>(null) 
+
 
   async function carregar() {
     const res = await fetch('http://localhost:3001/pessoas')
@@ -11,7 +19,7 @@ export default function App() {
     setPessoas(data)
   }
 
-  useEffect(() => { carregar() }, [])
+  useEffect(() => { carregar(); }, []);
 
   async function cadastrar() {
     await fetch('http://localhost:3001/pessoas', {
@@ -24,27 +32,68 @@ export default function App() {
     carregar()
   }
 
+  async function salvarEdicao() {
+    if (editandoId !== null) {
+      fetch(`http://localhost:3001/pessoas/${editandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email })
+      })
+      setEditandoId(null)
+      setNome('')
+      setEmail('')
+      carregar()
+    }
+  }
+
   async function deletar(id: number) {
     await fetch(`http://localhost:3001/pessoas/${id}`, { method: 'DELETE' })
     carregar()
   }
 
-  return (
-    <div style={{ fontFamily: 'Arial', maxWidth: '500px', margin: '30px auto' }}>
-      <h1 style={{ fontSize: '28px', lineHeight: '1.2', textAlign: 'center' }}>Cadastro de Pessoas - CRUD</h1>
+  function comecarEditar(pessoas: Pessoa) {
+    setEditandoId(pessoas.id)
+    setNome(pessoas.nome)
+    setEmail(pessoas.email)
+  }
 
-      <input placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} style={{ display: 'block', marginBottom: '10px', padding: '8px', width: '100%' }} />
-      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ display: 'block', marginBottom: '10px', padding: '8px', width: '100%' }} />
-      <button onClick={cadastrar} style={{ padding: '10px 20px' }}>Cadastrar</button>
+  function cancelarEdicao() {
+    setEditandoId(null)
+    setNome('')
+    setEmail('')
+  }
 
-      <hr />
-
-      {pessoas.map((p: any) => (
-        <div key={p.id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
-          <b>{p.nome}</b> - {p.email}
-          <button onClick={() => deletar(p.id)} style={{ marginLeft: '10px', color: 'red' }}>Deletar</button>
-        </div>
-      ))}
+   return (
+    <div style={{ padding: 20, fontFamily: 'Arial' }}>
+      <h1>Cadastro</h1>
+      <input
+        placeholder="Nome"
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+      />
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ marginLeft: 8 }}
+      />
+      {editandoId === null ? (
+        <button onClick={cadastrar} style={{ marginLeft: 8 }}>Cadastrar</button>
+      ) : (
+        <>
+          <button onClick={salvarEdicao} style={{ marginLeft: 8 }}>Salvar Edição</button>
+          <button onClick={cancelarEdicao} style={{ marginLeft: 8 }}>Cancelar</button>
+        </>
+      )}
+      <ul>
+        {pessoas.map((p) => (
+          <li key={p.id}>
+            {p.nome} - {p.email}{' '}
+            <button onClick={() => comecarEditar(p)}>Editar</button>{' '}
+            <button onClick={() => deletar(p.id)}>Deletar</button>
+          </li>
+        ))}
+      </ul>
     </div>
-  )
+  );
 }

@@ -43,9 +43,11 @@ app.get('/pessoas/:id', async (req, res) => {
 });
 
 app.put('/pessoas/:id', async (req, res) => {
-  const { id } = req.params;
+  const id = Number(req.params.id);
   const { nome, email } = req.body;
-  const result = await pool.query('UPDATE pessoas SET nome=$1, email=$2 WHERE id=$3 RETURNING *', [nome, email, id]);
+  const result = await pool.query(
+    'UPDATE pessoas SET nome= $1, email= $2 WHERE id= $3 RETURNING * ',
+     [nome, email, id]);
   res.json(result.rows[0]);
 });
 
