@@ -10,7 +10,7 @@ const pool = new Pool({
   user: 'postgres',
   password: '1234',
   host: 'localhost',
-  port: 5433,
+  port: 5432,
   database: 'crudstarter9'
 });
 
@@ -26,9 +26,20 @@ app.post('/pessoas', async (req, res) => {
   res.json(result.rows[0]);
 });
 
+// app.get esse é utilizado para buscar todos
 app.get('/pessoas', async (req, res) => {
   const result = await pool.query('SELECT * FROM pessoas ORDER BY id');
   res.json(result.rows);
+});
+
+//app.get esse get já é utilizado para buscar por ID
+app.get('/pessoas/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const result = await pool.query('SELECT * FROM pessoas WHERE id = $1', [id]);
+  if (result.rows.length === 0) {
+    return res.status(404).json({ erro: 'Pessoa não encontrada' });
+  }
+  res.json(result.rows[0]);
 });
 
 app.put('/pessoas/:id', async (req, res) => {
