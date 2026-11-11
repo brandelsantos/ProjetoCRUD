@@ -6,14 +6,13 @@ Start-Process powershell -ArgumentList "-NoExit -Command cd '$root\frontend'; np
 
 
 /*
-move .\.git\Start-tudo.ps1 .\Start-tudo.ps1
-git add Start-tudo.ps1
-git commit -m "adiciona script para iniciar tudo"
-git push
 git pull
-
-
 powershell -ExecutionPolicy Bypass -File .\.git\Start-tudo.ps1
+git add .
+git commit -m "o que mudou"
+git push
+
+
 
 */
 /* PARA INICIAR TODO ARQUIVO USAR        (git pull)     */
