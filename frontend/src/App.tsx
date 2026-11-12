@@ -12,7 +12,6 @@ export default function App() {
   const [email, setEmail] = useState('')
   const [editandoId, setEditandoId] = useState<number | null>(null) 
 
-
   async function carregar() {
     const res = await fetch('http://localhost:3001/pessoas')
     const data = await res.json()
@@ -34,7 +33,7 @@ export default function App() {
 
   async function salvarEdicao() {
     if (editandoId !== null) {
-      fetch(`http://localhost:3001/pessoas/${editandoId}`, {
+      await fetch(`http://localhost:3001/pessoas/${editandoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, email })
@@ -51,10 +50,10 @@ export default function App() {
     carregar()
   }
 
-  function comecarEditar(pessoas: Pessoa) {
-    setEditandoId(pessoas.id)
-    setNome(pessoas.nome)
-    setEmail(pessoas.email)
+  function comecarEditar(pessoa: Pessoa) {
+    setEditandoId(pessoa.id)
+    setNome(pessoa.nome)
+    setEmail(pessoa.email)
   }
 
   function cancelarEdicao() {
@@ -63,28 +62,40 @@ export default function App() {
     setEmail('')
   }
 
-   return (
+  return (
     <div style={{ padding: 20, fontFamily: 'Arial' }}>
-      <h1>Cadastro</h1>
-      <input
-        placeholder="Nome"
-        value={nome}
-        onChange={(e) => setNome(e.target.value)}
-      />
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{ marginLeft: 8 }}
-      />
-      {editandoId === null ? (
-        <button onClick={cadastrar} style={{ marginLeft: 8 }}>Cadastrar</button>
-      ) : (
-        <>
-          <button onClick={salvarEdicao} style={{ marginLeft: 8 }}>Salvar Edição</button>
-          <button onClick={cancelarEdicao} style={{ marginLeft: 8 }}>Cancelar</button>
-        </>
-      )}
+      {/* 👇 AQUI FICA O SEU DESENHO 👇 */}
+      <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
+        <img 
+          src="/desenho.webp" 
+          alt="Meu desenho" 
+          className="foto-desenho"
+        />
+        <h1>Cadastro de Pessoas - CRUD</h1>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <input
+          placeholder="Nome"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+        />
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{ marginLeft: 8 }}
+        />
+        {editandoId === null ? (
+          <button onClick={cadastrar} style={{ marginLeft: 8 }}>Cadastrar</button>
+        ) : (
+          <>
+            <button onClick={salvarEdicao} style={{ marginLeft: 8 }}>Salvar Edição</button>
+            <button onClick={cancelarEdicao} style={{ marginLeft: 8 }}>Cancelar</button>
+          </>
+        )}
+      </div>
+
       <ul>
         {pessoas.map((p) => (
           <li key={p.id}>

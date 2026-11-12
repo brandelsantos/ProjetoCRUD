@@ -1,29 +1,22 @@
-# Sobe o banco
+# Sobe o banco 
 docker compose up -d
 
 Write-Host "Esperando o banco ficar pronto..."
 Start-Sleep -Seconds 10
 
-# Confere se o banco está pronto
+# Vai conferir se está ok 
 docker logs starter_crud --tail 5
 
-# Sobe o backend em janela separada
+# Vai fazer o node server.js separado
 Start-Process powershell -ArgumentList "-NoExit -Command cd C:\Users\fnk20\ProjetoCRUD\ProjetoCRUD\backend; node server.js"
 
-# Espera um pouco pro backend subir
+# Cd de iniciar
 Start-Sleep -Seconds 3
 
-# Sobe o frontend em janela separada
+# Sobe o run dev separado
 Start-Process powershell -ArgumentList "-NoExit -Command cd C:\Users\fnk20\ProjetoCRUD\ProjetoCRUD\frontend; npm run dev"
 
 Write-Host "Tudo subindo! Banco + Backend + Frontend"
-
-
-
-
-
-
-
 /*
 
 git pull
