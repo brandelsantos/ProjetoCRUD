@@ -1,20 +1,18 @@
-# Sobe o banco 
+Set-Location "$PSScriptRoot"
 docker compose up -d
 
 Write-Host "Esperando o banco ficar pronto..."
 Start-Sleep -Seconds 10
 
-# Vai conferir se está ok 
 docker logs starter_crud --tail 5
 
-# Vai fazer o node server.js separado
-Start-Process powershell -ArgumentList "-NoExit -Command cd C:\Users\fnk20\ProjetoCRUD\ProjetoCRUD\backend; node server.js"
+# Sobe o backend separado
+Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-NoExit", "-File", "$PSScriptRoot\start-backend.ps1"
 
-# Cd de iniciar
 Start-Sleep -Seconds 3
 
-# Sobe o run dev separado
-Start-Process powershell -ArgumentList "-NoExit -Command cd C:\Users\fnk20\ProjetoCRUD\ProjetoCRUD\frontend; npm run dev"
+# Sobe o frontend separado
+Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-NoExit", "-File", "$PSScriptRoot\start-frontend.ps1"
 
 Write-Host "Tudo subindo! Banco + Backend + Frontend"
 /*
