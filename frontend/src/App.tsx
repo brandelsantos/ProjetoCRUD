@@ -13,7 +13,7 @@ export default function App() {
   const [editandoId, setEditandoId] = useState<number | null>(null) 
 
   async function carregar() {
-    const res = await fetch('http://localhost:3001/pessoas')
+    const res = await fetch('/api/pessoas')
     const data = await res.json()
     setPessoas(data)
   }
@@ -21,7 +21,7 @@ export default function App() {
   useEffect(() => { carregar(); }, []);
 
   async function cadastrar() {
-    await fetch('http://localhost:3001/pessoas', {
+    await fetch('/api/pessoas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, email })
@@ -33,7 +33,7 @@ export default function App() {
 
   async function salvarEdicao() {
     if (editandoId !== null) {
-      await fetch(`http://localhost:3001/pessoas/${editandoId}`, {
+      await fetch(`/api/pessoas/${editandoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, email })
@@ -46,7 +46,7 @@ export default function App() {
   }
 
   async function deletar(id: number) {
-    await fetch(`http://localhost:3001/pessoas/${id}`, { method: 'DELETE' })
+    await fetch(`/api/pessoas/${id}`, { method: 'DELETE' })
     carregar()
   }
 
@@ -64,14 +64,13 @@ export default function App() {
 
   return (
     <div style={{ padding: 20, fontFamily: 'Arial' }}>
-      {/* 👇 AQUI FICA O SEU DESENHO 👇 */}
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
         <img 
           src="/desenho.webp" 
           alt="Meu desenho" 
           className="foto-desenho"
         />
-        <h1>Cadastro de Pessoas - CRUD</h1>
+        <h1>Cadastro de Pessoas  -   CRUD</h1>
       </div>
 
       <div style={{ textAlign: 'center' }}>

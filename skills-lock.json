@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "skills": {
+    "expose-localhost": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/expose-localhost/SKILL.md",
+      "computedHash": "31957854518c4fadb94aa7502a775b361198266f396d130df34fb6b7bbc97a76"
+    },
+    "ngrok-engine": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ngrok-engine/SKILL.md",
+      "computedHash": "7be8caabcb8b68a5cf8575faa0fb632e46009f7aabec990a48271c217f150801"
+    },
+    "ngrok-setup": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ngrok-setup/SKILL.md",
+      "computedHash": "f6c196e8bfa7fc3eb3360142bf9bb5e46eeceff190b1988bb4c1c91d90a0979e"
+    },
+    "ngrok-surfaces": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ngrok-surfaces/SKILL.md",
+      "computedHash": "0f8ea6b2977d1fe60becbe90534132adcf1dbb6cc57c0edceef3e99dc010a451"
+    },
+    "provision-sandbox-access": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/provision-sandbox-access/SKILL.md",
+      "computedHash": "426a3672309f20745f13c54fdb8f2f77ad6dbf638568390505882702a9d55f4a"
+    },
+    "receive-webhooks": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/receive-webhooks/SKILL.md",
+      "computedHash": "18e5d131e3b1054de667138a388d904b9cc2e1322215d4bc7b21507b5930f35f"
+    },
+    "run-mcp-gateway": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/run-mcp-gateway/SKILL.md",
+      "computedHash": "3831a6ff407e55ad383a5b3dbc4ece980e080c85c860cd7e80e9f17adabb52d2"
+    },
+    "secure-endpoint": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/secure-endpoint/SKILL.md",
+      "computedHash": "940081f967587b40b89e2dd9363da241a1b3c473b9463f944d24c40219a6afd0"
+    },
+    "troubleshoot-ngrok": {
+      "source": "ngrok/skills",
+      "sourceType": "github",
+      "skillPath": "skills/troubleshoot-ngrok/SKILL.md",
+      "computedHash": "1dcc139a03a0119b6db6391fe0daea60b301d55e6f69a9888c62c468f799bc6a"
+    }
+  }
+}
