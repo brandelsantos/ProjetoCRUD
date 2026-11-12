@@ -1,18 +1,15 @@
 Set-Location "$PSScriptRoot"
 docker compose up -d
-
 Write-Host "Esperando o banco ficar pronto..."
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 5
 
-docker logs starter_crud --tail 5
-
-# Sobe o backend separado
-Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-NoExit", "-File", "$PSScriptRoot\start-backend.ps1"
+Write-Host "Abrindo backend..."
+cmd /c start powershell -ExecutionPolicy Bypass -NoExit -File "$PSScriptRoot\start-backend.ps1"
 
 Start-Sleep -Seconds 3
 
-# Sobe o frontend separado
-Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-NoExit", "-File", "$PSScriptRoot\start-frontend.ps1"
+Write-Host "Abrindo frontend..."
+cmd /c start powershell -ExecutionPolicy Bypass -NoExit -File "$PSScriptRoot\start-frontend.ps1"
 
 Write-Host "Tudo subindo! Banco + Backend + Frontend"
 /*
