@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import './App.css'
 
 type Pessoa = {
   id: number
@@ -39,7 +40,6 @@ export default function App() {
       setMensagem('Email inválido, tem que ter @')
       return
     }
-
     try {
       const res = await fetch('/api/pessoas', {
         method: 'POST',
@@ -70,7 +70,6 @@ export default function App() {
         setMensagem('Email inválido, tem que ter @')
         return
       }
-
       try {
         const res = await fetch(`/api/pessoas/${editandoId}`, {
           method: 'PUT',
@@ -96,7 +95,6 @@ export default function App() {
   async function deletar(id: number, nomePessoa: string) {
     const confirmar = confirm(`Tem certeza que quer deletar ${nomePessoa}?`)
     if (!confirmar) return
-
     try {
       const res = await fetch(`/api/pessoas/${id}`, { method: 'DELETE' })
       if (!res.ok) {
@@ -128,28 +126,23 @@ export default function App() {
   )
 
   return (
-    <div style={{ padding: 20, fontFamily: 'Arial' }}>
+      <div style={{
+        padding: 24,
+        fontFamily: 'Arial',
+        background: '#1f2028',
+        maxWidth: 600,
+        margin: '40px auto',
+        borderRadius: 16,
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+        }}>
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
-        <img
-          src="/desenho.webp"
-          alt="Meu desenho"
-          className="foto-desenho"
-        />
+        <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
         <h1>Cadastro de Pessoas  -   CRUD</h1>
       </div>
 
       <div style={{ textAlign: 'center' }}>
-        <input
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ marginLeft: 8 }}
-        />
+        <input placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginLeft: 8 }} />
         {editandoId === null ? (
           <button onClick={cadastrar} style={{ marginLeft: 8 }}>Cadastrar</button>
         ) : (
@@ -161,11 +154,7 @@ export default function App() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <input
-          placeholder="Buscar por nome..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-        />
+        <input placeholder="Buscar por nome..." value={busca} onChange={(e) => setBusca(e.target.value)} />
       </div>
 
       {mensagem && <p style={{ textAlign: 'center' }}>{mensagem}</p>}
