@@ -10,50 +10,110 @@ export default function App() {
   const [pessoas, setPessoas] = useState<any[]>([])
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
-  const [editandoId, setEditandoId] = useState<number | null>(null) 
+  const [editandoId, setEditandoId] = useState<number | null>(null)
+  const [mensagem, setMensagem] = useState('')
+  const [carregando, setCarregando] = useState(true)
 
   async function carregar() {
-    const res = await fetch('/api/pessoas')
-    const data = await res.json()
-    setPessoas(data)
+    try {
+      setCarregando(true)
+      const res = await fetch('/api/pessoas')
+      const data = await res.json()
+      setPessoas(data)
+    } catch {
+      setMensagem('Erro ao carregar pessoas')
+    } finally {
+      setCarregando(false)
+    }
   }
 
   useEffect(() => { carregar(); }, []);
 
   async function cadastrar() {
-    await fetch('/api/pessoas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, email })
-    })
-    setNome('')
-    setEmail('')
-    carregar()
+    if (!nome.trim()) {
+      setMensagem('Nome é obrigatório')
+      return
+    }
+    if (!email.includes('@')) {
+      setMensagem('Email inválido, tem que ter @')
+      return
+    }
+
+    try {
+      const res = await fetch('/api/pessoas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setMensagem(data.erro || 'Erro ao cadastrar')
+        return
+      }
+      setMensagem('Cadastrado com sucesso!')
+      setNome('')
+      setEmail('')
+      carregar()
+    } catch {
+      setMensagem('Erro ao conectar no backend')
+    }
   }
 
   async function salvarEdicao() {
     if (editandoId !== null) {
-      await fetch(`/api/pessoas/${editandoId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email })
-      })
-      setEditandoId(null)
-      setNome('')
-      setEmail('')
-      carregar()
+      if (!nome.trim()) {
+        setMensagem('Nome é obrigatório')
+        return
+      }
+      if (!email.includes('@')) {
+        setMensagem('Email inválido, tem que ter @')
+        return
+      }
+
+      try {
+        const res = await fetch(`/api/pessoas/${editandoId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email })
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setMensagem(data.erro || 'Erro ao editar')
+          return
+        }
+        setMensagem('Editado com sucesso!')
+        setEditandoId(null)
+        setNome('')
+        setEmail('')
+        carregar()
+      } catch {
+        setMensagem('Erro ao conectar no backend')
+      }
     }
   }
 
-  async function deletar(id: number) {
-    await fetch(`/api/pessoas/${id}`, { method: 'DELETE' })
-    carregar()
+  async function deletar(id: number, nomePessoa: string) {
+    const confirmar = confirm(`Tem certeza que quer deletar ${nomePessoa}?`)
+    if (!confirmar) return
+
+    try {
+      const res = await fetch(`/api/pessoas/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        setMensagem('Erro ao deletar')
+        return
+      }
+      setMensagem('Deletado com sucesso!')
+      carregar()
+    } catch {
+      setMensagem('Erro ao conectar no backend')
+    }
   }
 
   function comecarEditar(pessoa: Pessoa) {
     setEditandoId(pessoa.id)
     setNome(pessoa.nome)
     setEmail(pessoa.email)
+    setMensagem('')
   }
 
   function cancelarEdicao() {
@@ -65,9 +125,9 @@ export default function App() {
   return (
     <div style={{ padding: 20, fontFamily: 'Arial' }}>
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
-        <img 
-          src="/desenho.webp" 
-          alt="Meu desenho" 
+        <img
+          src="/desenho.webp"
+          alt="Meu desenho"
           className="foto-desenho"
         />
         <h1>Cadastro de Pessoas  -   CRUD</h1>
@@ -95,15 +155,21 @@ export default function App() {
         )}
       </div>
 
-      <ul>
-        {pessoas.map((p) => (
-          <li key={p.id}>
-            {p.nome} - {p.email}{' '}
-            <button onClick={() => comecarEditar(p)}>Editar</button>{' '}
-            <button onClick={() => deletar(p.id)}>Deletar</button>
-          </li>
-        ))}
-      </ul>
+      {mensagem && <p style={{ textAlign: 'center' }}>{mensagem}</p>}
+
+      {carregando ? (
+        <p style={{ textAlign: 'center' }}>Carregando...</p>
+      ) : (
+        <ul>
+          {pessoas.map((p) => (
+            <li key={p.id}>
+              {p.nome} - {p.email}{' '}
+              <button onClick={() => comecarEditar(p)}>Editar</button>{' '}
+              <button onClick={() => deletar(p.id, p.nome)}>Deletar</button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
