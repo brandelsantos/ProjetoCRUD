@@ -7,15 +7,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Validação - bloqueia cadastro errado
+function validarPessoa(nome, email) {
+  if (!nome || !nome.trim()) {
+    return 'Nome é obrigatório';
+  }
+  if (!email || !email.includes('@')) {
+    return 'Email inválido, tem que ter @';
+  }
+  return null;
+}
+
 const pool = new Pool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || '1234',
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'crudstarter9'
 });
 
-// ISSO AQUI É O QUE FALTAVA - ele não deixa o backend morrer se o banco piscar
 pool.on('error', (err) => {
   console.error('Erro no pool do banco:', err.message);
 });
@@ -35,43 +45,97 @@ async function criarTabela() {
 }
 criarTabela();
 
-app.post('/pessoas', async (req, res) => {
-  try {
-    const { nome, email } = req.body;
-    const result = await pool.query('INSERT INTO pessoas (nome, email) VALUES ($1, $2) RETURNING *', [nome, email]);
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ erro: err.message });
-  }
-});
-
+// GET - Buscar todos
 app.get('/pessoas', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM pessoas ORDER BY id');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ erro: err.message });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
   }
 });
 
-app.put('/pessoas/:id', async (req, res) => {
+// GET - Buscar 1 por id
+app.get('/pessoas/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { nome, email } = req.body;
-    const result = await pool.query('UPDATE pessoas SET nome=$1, email=$2 WHERE id=$3 RETURNING *', [nome, email, id]);
+    const id = Number(req.params.id);
+    const result = await pool.query('SELECT * FROM pessoas WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Pessoa não encontrada' });
+    }
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ erro: err.message });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
   }
 });
 
+// POST - Cadastrar
+app.post('/pessoas', async (req, res) => {
+  try {
+    const { nome, email } = req.body;
+
+    const erro = validarPessoa(nome, email);
+    if (erro) {
+      return res.status(400).json({ erro });
+    }
+
+    const result = await pool.query(
+      'INSERT INTO pessoas (nome, email) VALUES ($1, $2) RETURNING *',
+      [nome, email]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+// PUT - Editar
+app.put('/pessoas/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { nome, email } = req.body;
+
+    const erro = validarPessoa(nome, email);
+    if (erro) {
+      return res.status(400).json({ erro });
+    }
+
+    const result = await pool.query(
+      'UPDATE pessoas SET nome = $1, email = $2 WHERE id = $3 RETURNING *',
+      [nome, email, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Pessoa não encontrada' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+// DELETE - Deletar
 app.delete('/pessoas/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM pessoas WHERE id=$1', [id]);
+    const id = Number(req.params.id);
+    const result = await pool.query(
+      'DELETE FROM pessoas WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Pessoa não encontrada' });
+    }
+
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ erro: err.message });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
   }
 });
 
