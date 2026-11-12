@@ -1,7 +1,7 @@
 services:
-  crudstarter:
+  db:
     image: postgres:16
-    container_name:  starter_crud
+    container_name: starter_crud
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
@@ -10,6 +10,29 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: crud_backend
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: 1234
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: crudstarter9
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: crud_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
 volumes:
   pgdata:
-  
