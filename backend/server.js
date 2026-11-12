@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -7,11 +8,11 @@ app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({
-  user: 'postgres',
-  password: '1234',
-  host: 'localhost',
-  port: 5433,
-  database: 'crudstarter9'
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME
 });
 
 // ISSO AQUI É O QUE FALTAVA - ele não deixa o backend morrer se o banco piscar
@@ -74,4 +75,5 @@ app.delete('/pessoas/:id', async (req, res) => {
   }
 });
 
-app.listen(3001, () => console.log('Backend rodando em http://localhost:3001'));
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Backend rodando em http://localhost:${PORT}`));
