@@ -13,6 +13,7 @@ export default function App() {
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [mensagem, setMensagem] = useState('')
   const [carregando, setCarregando] = useState(true)
+  const [busca, setBusca] = useState('')
 
   async function carregar() {
     try {
@@ -122,6 +123,10 @@ export default function App() {
     setEmail('')
   }
 
+  const pessoasFiltradas = pessoas.filter((p) =>
+    p.nome.toLowerCase().includes(busca.toLowerCase())
+  )
+
   return (
     <div style={{ padding: 20, fontFamily: 'Arial' }}>
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -155,13 +160,21 @@ export default function App() {
         )}
       </div>
 
+      <div style={{ textAlign: 'center', marginTop: 16 }}>
+        <input
+          placeholder="Buscar por nome..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+      </div>
+
       {mensagem && <p style={{ textAlign: 'center' }}>{mensagem}</p>}
 
       {carregando ? (
         <p style={{ textAlign: 'center' }}>Carregando...</p>
       ) : (
         <ul>
-          {pessoas.map((p) => (
+          {pessoasFiltradas.map((p) => (
             <li key={p.id}>
               {p.nome} - {p.email}{' '}
               <button onClick={() => comecarEditar(p)}>Editar</button>{' '}
