@@ -15,6 +15,7 @@ export default function App() {
   const [mensagem, setMensagem] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [busca, setBusca] = useState('')
+  const [ordenarPorNome, setOrdenarPorNome] = useState(false)
 
   async function carregar() {
     try {
@@ -121,20 +122,26 @@ export default function App() {
     setEmail('')
   }
 
-  const pessoasFiltradas = pessoas.filter((p) =>
-    p.nome.toLowerCase().includes(busca.toLowerCase())
-  )
+  const pessoasFiltradas = pessoas
+    .filter((p) =>
+      p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      p.email.toLowerCase().includes(busca.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!ordenarPorNome) return 0
+      return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase())
+    })
 
-    return (
-      <div style={{
-        padding: 24,
-        fontFamily: 'Arial',
-        background: '#1f2028',
-        maxWidth: 600,
-        margin: '40px auto',
-        borderRadius: 16,
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-        }}> 
+  return (
+    <div style={{
+      padding: 24,
+      fontFamily: 'Arial',
+      background: '#1f2028',
+      maxWidth: 600,
+      margin: '40px auto',
+      borderRadius: 16,
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+    }}>
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
         <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
         <h1>Cadastro de Pessoas  -   CRUD</h1>
@@ -154,7 +161,7 @@ export default function App() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <input placeholder="Buscar por nome..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => setBusca(e.target.value)} />
       </div>
 
       {mensagem && (
@@ -168,7 +175,17 @@ export default function App() {
         }}>
           {mensagem}
         </p>
-)}
+      )}
+
+      <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>
+        Mostrando {pessoasFiltradas.length} de {pessoas.length} pessoas
+      </p>
+
+      <div style={{ textAlign: 'center' }}>
+        <button onClick={() => setOrdenarPorNome(!ordenarPorNome)} style={{ background: '#1f2028', color: '#ffffff', border: '1px solid #4b5563', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', marginTop: 8 }}>
+          {ordenarPorNome ? 'Ordenado A-Z ✓' : 'Ordenar A-Z'}
+        </button>
+      </div>
 
       {carregando ? (
         <p style={{ textAlign: 'center' }}>Carregando...</p>
