@@ -16,6 +16,7 @@ export default function App() {
   const [carregando, setCarregando] = useState(true)
   const [busca, setBusca] = useState('')
   const [ordenarPorNome, setOrdenarPorNome] = useState(false)
+  const [pagina, setPagina] = useState(1)
 
   async function carregar() {
     try {
@@ -131,6 +132,10 @@ export default function App() {
   }
 
   const pessoasFiltradas = pessoas
+  const porPagina = 5
+  const totalPaginas = Math.ceil(pessoasFiltradas.length / porPagina)
+  const inicio = (pagina - 1) * porPagina
+  const pessoasDaPagina = pessoasFiltradas.slice(inicio, inicio + porPagina)
     .filter((p) =>
       p.nome.toLowerCase().includes(busca.toLowerCase()) ||
       p.email.toLowerCase().includes(busca.toLowerCase())
@@ -173,6 +178,43 @@ export default function App() {
   {busca && (
     <button onClick={() => setBusca('')} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>
   )}
+  <div style={{ textAlign: 'center', marginTop: 16 }}>
+  <button
+    onClick={() => setPagina(pagina - 1)}
+    disabled={pagina === 1}
+    style={{
+      background: pagina === 1 ? '#4b5563' : '#3b82f6',
+      color: '#ffffff',
+      border: 'none',
+      padding: '8px 12px',
+      borderRadius: 8,
+      cursor: pagina === 1 ? 'not-allowed' : 'pointer',
+      marginRight: 8
+    }}
+  >
+    Anterior
+  </button>
+
+  <span style={{ color: '#e5e7eb' }}>
+    Página {pagina} de {totalPaginas}
+  </span>
+
+  <button
+    onClick={() => setPagina(pagina + 1)}
+    disabled={pagina === totalPaginas}
+    style={{
+      background: pagina === totalPaginas ? '#4b5563' : '#3b82f6',
+      color: '#ffffff',
+      border: 'none',
+      padding: '8px 12px',
+      borderRadius: 8,
+      cursor: pagina === totalPaginas ? 'not-allowed' : 'pointer',
+      marginLeft: 8
+    }}
+  >
+    Próxima
+  </button>
+</div>
 </div>
 
       {mensagem && (
@@ -202,7 +244,7 @@ export default function App() {
         <p style={{ textAlign: 'center' }}>Carregando...</p>
       ) : (
         <ul style={{ padding: 0 }}>
-          {pessoasFiltradas.map((p) => (
+          {pessoasDaPagina.map((p) => (
             <li key={p.id} style={{
               background: '#2e303a',
               padding: '12px 16px',
