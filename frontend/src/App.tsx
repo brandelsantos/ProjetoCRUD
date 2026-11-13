@@ -41,7 +41,7 @@ export default function App() {
   setMensagem('Nome não pode ter caracteres especiais, só letras e espaço')
   return
 }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
   setMensagem('Email inválido, tem que ser tipo nome@email.com')
   return
 }
