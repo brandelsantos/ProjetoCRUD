@@ -37,10 +37,14 @@ export default function App() {
       setMensagem('Nome é obrigatório')
       return
     }
-    if (!email.includes('@')) {
-      setMensagem('Email inválido, tem que ter @')
-      return
-    }
+    if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nome.trim())) {
+  setMensagem('Nome não pode ter caracteres especiais, só letras e espaço')
+  return
+}
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  setMensagem('Email inválido, tem que ser tipo nome@email.com')
+  return
+}
     try {
       const res = await fetch('/api/pessoas', {
         method: 'POST',
@@ -67,6 +71,10 @@ export default function App() {
         setMensagem('Nome é obrigatório')
         return
       }
+      if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nome.trim())) {
+  setMensagem('Nome não pode ter caracteres especiais, só letras e espaço')
+  return
+}
       if (!email.includes('@')) {
         setMensagem('Email inválido, tem que ter @')
         return
@@ -161,8 +169,11 @@ export default function App() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-      </div>
+  <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+  {busca && (
+    <button onClick={() => setBusca('')} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>
+  )}
+</div>
 
       {mensagem && (
         <p style={{
