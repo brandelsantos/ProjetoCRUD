@@ -157,17 +157,39 @@ export default function App() {
         <input placeholder="Buscar por nome..." value={busca} onChange={(e) => setBusca(e.target.value)} />
       </div>
 
-      {mensagem && <p style={{ textAlign: 'center' }}>{mensagem}</p>}
+      {mensagem && (
+        <p style={{
+          textAlign: 'center',
+          background: mensagem.includes('sucesso') ? '#22c55e' : '#ef4444',
+          color: '#ffffff',
+          padding: '10px',
+          borderRadius: 8,
+          fontWeight: 600
+        }}>
+          {mensagem}
+        </p>
+)}
 
       {carregando ? (
         <p style={{ textAlign: 'center' }}>Carregando...</p>
       ) : (
-        <ul>
+        <ul style={{ padding: 0 }}>
           {pessoasFiltradas.map((p) => (
-            <li key={p.id}>
-              {p.nome} - {p.email}{' '}
-              <button onClick={() => comecarEditar(p)} style={{ background: '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Editar</button>{' '}
-              <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
+            <li key={p.id} style={{
+              background: '#2e303a',
+              padding: '12px 16px',
+              borderRadius: 10,
+              marginBottom: 10,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              listStyle: 'none'
+            }}>
+              <span>{p.nome} - {p.email}</span>
+              <span>
+                <button onClick={() => comecarEditar(p)} style={{ background: '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Editar</button>{' '}
+                <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
+              </span>
             </li>
           ))}
         </ul>
