@@ -53,12 +53,12 @@ input::placeholder {
 }
 
 button {
-  background: #646cff !important;
-  color: #ffffff !important;
-  border: none !important;
-  padding: 10px 14px !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
+  background: #646cff ;
+  color: #ffffff ;
+  border: none !;
+  padding: 10px 14px ;
+  border-radius: 8px !;
+  font-weight: 600 !;
   cursor: pointer;
 }
 

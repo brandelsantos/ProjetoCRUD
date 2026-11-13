@@ -125,7 +125,7 @@ export default function App() {
     p.nome.toLowerCase().includes(busca.toLowerCase())
   )
 
-  return (
+    return (
       <div style={{
         padding: 24,
         fontFamily: 'Arial',
@@ -134,7 +134,7 @@ export default function App() {
         margin: '40px auto',
         borderRadius: 16,
         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-        }}>
+        }}> 
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
         <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
         <h1>Cadastro de Pessoas  -   CRUD</h1>
@@ -144,11 +144,11 @@ export default function App() {
         <input placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
         <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginLeft: 8 }} />
         {editandoId === null ? (
-          <button onClick={cadastrar} style={{ marginLeft: 8 }}>Cadastrar</button>
+          <button onClick={cadastrar} style={{ marginLeft: 8, background: '#22c55e', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cadastrar</button>
         ) : (
           <>
-            <button onClick={salvarEdicao} style={{ marginLeft: 8 }}>Salvar Edição</button>
-            <button onClick={cancelarEdicao} style={{ marginLeft: 8 }}>Cancelar</button>
+            <button onClick={salvarEdicao} style={{ marginLeft: 8, background: '#22c55e', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Salvar Edição</button>
+            <button onClick={cancelarEdicao} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
           </>
         )}
       </div>
@@ -166,8 +166,8 @@ export default function App() {
           {pessoasFiltradas.map((p) => (
             <li key={p.id}>
               {p.nome} - {p.email}{' '}
-              <button onClick={() => comecarEditar(p)}>Editar</button>{' '}
-              <button onClick={() => deletar(p.id, p.nome)}>Deletar</button>
+              <button onClick={() => comecarEditar(p)} style={{ background: '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Editar</button>{' '}
+              <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
             </li>
           ))}
         </ul>
