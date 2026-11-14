@@ -120,6 +120,22 @@ export default function App() {
       setMensagem('Erro ao conectar no backend')
     }
   }
+  async function limparTudo() {
+  if (pessoas.length === 0) return
+  const confirmar = confirm(`Tem certeza que quer apagar TODAS as ${pessoas.length} pessoas?`)
+  if (!confirmar) return
+  try {
+    // Apaga uma por uma
+    for (const p of pessoas) {
+      await fetch(`${API}/${p.id}`, { method: 'DELETE' })
+    }
+    setMensagem('Tudo apagado com sucesso!')
+    setPagina(1)
+    carregar()
+  } catch {
+    setMensagem('Erro ao limpar tudo')
+  }
+}
 
   function comecarEditar(pessoa: Pessoa) {
     setEditandoId(pessoa.id)
@@ -206,6 +222,11 @@ export default function App() {
           {ordenarPorNome ? 'Ordenado A-Z' : 'Ordenar A-Z'}
         </button>
       </div>
+      <div style={{ textAlign: 'center', marginTop: 8 }}>
+  <button onClick={limparTudo} style={{ background: '#ef4444', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
+    Limpar Tudo
+  </button>
+</div>
 
       {carregando ? (
         <p style={{ textAlign: 'center' }}>Carregando...</p>
@@ -231,18 +252,18 @@ export default function App() {
                 <span>{p.nome} - {p.email}</span>
               )}
               <span>
-                {editandoId === p.id ? (
-                  <>
-                    <button onClick={salvarEdicao}>Salvar</button>
-                    <button onClick={cancelarEdicao}>Cancelar</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => comecarEditar(p)}>Editar</button>
-                    <button onClick={() => deletar(p.id, p.nome)}>Deletar</button>
-                  </>
-                )}
-              </span>
+  {editandoId === p.id ? (
+    <>
+      <button onClick={salvarEdicao} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', marginRight: 6 }}>Salvar</button>
+      <button onClick={cancelarEdicao} style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Cancelar</button>
+    </>
+  ) : (
+    <>
+      <button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', marginRight: 6 }}>Editar</button>
+      <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
+    </>
+  )}
+</span>
             </li>
           ))}
         </ul>
