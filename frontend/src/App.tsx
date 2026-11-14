@@ -7,8 +7,10 @@ type Pessoa = {
   email: string
 }
 
+const API = 'http://localhost:3001/pessoas'
+
 export default function App() {
-  const [pessoas, setPessoas] = useState<any[]>([])
+  const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [nomeEdit, setNomeEdit] = useState('')
   const [emailEdit, setEmailEdit] = useState('')
   const [editandoId, setEditandoId] = useState<number | null>(null)
@@ -21,11 +23,11 @@ export default function App() {
   async function carregar() {
     try {
       setCarregando(true)
-      const res = await fetch('/api/pessoas')
+      const res = await fetch(API)
       const data = await res.json()
       setPessoas(data)
     } catch {
-      setMensagem('Erro ao carregar pessoas')
+      setMensagem('Erro ao carregar pessoas - backend não está rodando?')
     } finally {
       setCarregando(false)
     }
@@ -35,10 +37,10 @@ export default function App() {
 
   async function cadastrar() {
     if (!nomeEdit.trim()) {
-    setMensagem('Nome é obrigatório')
-    return
-  }
-  if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nomeEdit.trim())) {
+      setMensagem('Nome é obrigatório')
+      return
+    }
+    if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nomeEdit.trim())) {
       setMensagem('Nome não pode ter caracteres especiais, só letras e espaço')
       return
     }
@@ -47,10 +49,11 @@ export default function App() {
       return
     }
     try {
-      const res = await fetch('/api/pessoas', {
+      // CORRIGIDO: manda { nome, email } e não { nomeEdit, emailEdit }
+      const res = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nomeEdit, emailEdit })
+        body: JSON.stringify({ nome: nomeEdit, email: emailEdit })
       })
       const data = await res.json()
       if (!res.ok) {
@@ -76,12 +79,12 @@ export default function App() {
         setMensagem('Nome não pode ter caracteres especiais, só letras e espaço')
         return
       }
-      if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(emailEdit  )) {
+      if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(emailEdit)) {
         setMensagem('Email inválido, tem que ser tipo nome@email.com')
         return
       }
       try {
-        const res = await fetch(`/api/pessoas/${editandoId}`, {
+        const res = await fetch(`${API}/${editandoId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nome: nomeEdit, email: emailEdit })
@@ -106,7 +109,7 @@ export default function App() {
     const confirmar = confirm(`Tem certeza que quer deletar ${nomePessoa}?`)
     if (!confirmar) return
     try {
-      const res = await fetch(`/api/pessoas/${id}`, { method: 'DELETE' })
+      const res = await fetch(`${API}/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         setMensagem('Erro ao deletar')
         return
@@ -119,11 +122,11 @@ export default function App() {
   }
 
   function comecarEditar(pessoa: Pessoa) {
-  setEditandoId(pessoa.id)
-  setNomeEdit(pessoa.nome)
-  setEmailEdit(pessoa.email)
-  setMensagem('')
-}
+    setEditandoId(pessoa.id)
+    setNomeEdit(pessoa.nome)
+    setEmailEdit(pessoa.email)
+    setMensagem('')
+  }
 
   function cancelarEdicao() {
     setEditandoId(null)
@@ -142,7 +145,7 @@ export default function App() {
     })
 
   const porPagina = 5
-  const totalPaginas = Math.ceil(pessoasFiltradas.length / porPagina)
+  const totalPaginas = Math.max(1, Math.ceil(pessoasFiltradas.length / porPagina))
   const inicio = (pagina - 1) * porPagina
   const pessoasDaPagina = pessoasFiltradas.slice(inicio, inicio + porPagina)
 
@@ -158,7 +161,7 @@ export default function App() {
     }}>
       <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
         <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
-        <h1>Cadastro de Pessoas  -   CRUD</h1>
+        <h1 style={{ lineHeight: 1.2, marginTop: 16, marginBottom: 16, fontSize: 32, whiteSpace: 'normal', wordBreak: 'break-word' }}>Cadastro de Pessoas - CRUD</h1>
       </div>
 
       <div style={{ textAlign: 'center' }}>
@@ -170,16 +173,15 @@ export default function App() {
           <>
             <button onClick={salvarEdicao} style={{ marginLeft: 8, background: '#22c55e', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Salvar Edição</button>
             <button onClick={cancelarEdicao} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-          
           </>
         )}
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} />
         {busca && (
-        <button onClick={() => setBusca("")} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>
-                )}
+          <button onClick={() => { setBusca(""); setPagina(1); }} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>
+        )}
       </div>
 
       {mensagem && (
@@ -196,7 +198,7 @@ export default function App() {
       )}
 
       <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>
-        Mostrando {pessoasFiltradas.length} de {pessoas.length} pessoas
+        Mostrando {pessoasDaPagina.length} de {pessoas.length} pessoas
       </p>
 
       <div style={{ textAlign: 'center' }}>
@@ -209,52 +211,47 @@ export default function App() {
         <p style={{ textAlign: 'center' }}>Carregando...</p>
       ) : (
         <ul style={{ padding: 0 }}>
-      {pessoasDaPagina.map((p) => (
-        <li key={p.id} style={{
-          background: '#2e303a',
-          padding: '12px 16px',
-          borderRadius: 10,
-          marginBottom: 10,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          listStyle: 'none'
-        }}>
-
-      {/* 1º SPAN - nome/email ou inputs */}
-      {editandoId === p.id ? (
-        <span>
-          <input value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} placeholder="Nome" />
-          <input value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} placeholder="Email" />
-        </span>
-      ) : (
-        <span>{p.nome} - {p.email}</span>
-      )}
-
-      {/* 2º SPAN - botões */}
-      <span>
-        {editandoId === p.id ? (
-          <>
-            <button onClick={salvarEdicao}>Salvar</button>
-            <button onClick={cancelarEdicao}>Cancelar</button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => comecarEditar(p)}>Editar</button>
-            <button onClick={() => deletar(p.id, p.nome)}>Deletar</button>
-          </>
-        )}
-      </span>
-
-    </li>
-  ))}
-</ul>
+          {pessoasDaPagina.map((p) => (
+            <li key={p.id} style={{
+              background: '#2e303a',
+              padding: '12px 16px',
+              borderRadius: 10,
+              marginBottom: 10,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              listStyle: 'none'
+            }}>
+              {editandoId === p.id ? (
+                <span>
+                  <input value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} placeholder="Nome" />
+                  <input value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} placeholder="Email" />
+                </span>
+              ) : (
+                <span>{p.nome} - {p.email}</span>
+              )}
+              <span>
+                {editandoId === p.id ? (
+                  <>
+                    <button onClick={salvarEdicao}>Salvar</button>
+                    <button onClick={cancelarEdicao}>Cancelar</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => comecarEditar(p)}>Editar</button>
+                    <button onClick={() => deletar(p.id, p.nome)}>Deletar</button>
+                  </>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
         <button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1} style={{ background: pagina === 1 ? '#4b5563' : '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: pagina === 1 ? 'not-allowed' : 'pointer', marginRight: 8 }}>Anterior</button>
-        <span style={{ color: '#e5e7eb' }}>Pagina {pagina} de {totalPaginas || 1}</span>
-        <button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas || totalPaginas === 0} style={{ background: pagina === totalPaginas || totalPaginas === 0 ? '#4b5563' : '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: pagina === totalPaginas ? 'not-allowed' : 'pointer', marginLeft: 8 }}>Proxima</button>
+        <span style={{ color: '#e5e7eb' }}>Pagina {pagina} de {totalPaginas}</span>
+        <button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas} style={{ background: pagina === totalPaginas ? '#4b5563' : '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: pagina === totalPaginas ? 'not-allowed' : 'pointer', marginLeft: 8 }}>Proxima</button>
       </div>
     </div>
   );
