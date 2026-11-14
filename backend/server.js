@@ -35,14 +35,22 @@ async function criarTabela() {
     await pool.query(`CREATE TABLE IF NOT EXISTS pessoas (
       id SERIAL PRIMARY KEY,
       nome VARCHAR(100),
-      email VARCHAR(100)
+      email VARCHAR(100),
+      telefone VARCHAR(20),
+      idade INT
     )`);
+
+    // Pra quem já tem a tabela criada sem telefone/idade, cria as colunas sem apagar os dados antigos
+    await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
+    await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
+
     console.log('Tabela pessoas pronta');
   } catch (err) {
     console.error('Erro ao criar tabela, tentando de novo em 3s:', err.message);
     setTimeout(criarTabela, 3000);
   }
 }
+
 criarTabela();
 
 // GET - Buscar todos
