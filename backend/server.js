@@ -82,17 +82,15 @@ app.get('/pessoas/:id', async (req, res) => {
 // POST - Cadastrar
 app.post('/pessoas', async (req, res) => {
   try {
-    const { nome, email } = req.body;
-
+    const { nome, email, telefone, idade } = req.body;
     const erro = validarPessoa(nome, email);
     if (erro) {
       return res.status(400).json({ erro });
     }
-
     const result = await pool.query(
-      'INSERT INTO pessoas (nome, email) VALUES ($1, $2) RETURNING *',
-      [nome, email]
-    );
+  'INSERT INTO pessoas (nome, email, telefone, idade) VALUES ($1, $2, $3, $4) RETURNING *',
+  [nome, email, telefone || null, idade || null]
+);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -104,7 +102,7 @@ app.post('/pessoas', async (req, res) => {
 app.put('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { nome, email } = req.body;
+    const { nome, email, telefone, idade } = req.body;
 
     const erro = validarPessoa(nome, email);
     if (erro) {
@@ -112,9 +110,9 @@ app.put('/pessoas/:id', async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE pessoas SET nome = $1, email = $2 WHERE id = $3 RETURNING *',
-      [nome, email, id]
-    );
+  'UPDATE pessoas SET nome = $1, email = $2, telefone = $3, idade = $4 WHERE id = $5 RETURNING *',
+  [nome, email, telefone || null, idade || null, id]
+);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ erro: 'Pessoa não encontrada' });
