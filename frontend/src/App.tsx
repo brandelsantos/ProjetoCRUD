@@ -155,12 +155,29 @@ export default function App() {
       </div>
 
       <div style={{ textAlign: 'center' }}>
-        <input placeholder="Nome" value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} />
-        <input placeholder="Email" value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} style={{ marginLeft: 8 }} />
+        <input 
+          placeholder="Nome" 
+          value={nomeEdit} 
+          onChange={(e) => setNomeEdit(e.target.value)} />
+        <input 
+          placeholder="Email" 
+          value={emailEdit} 
+          onChange={(e) => setEmailEdit(e.target.value)} 
+          style={{ marginLeft: 8 }} />
         <br /><br />
-        <input placeholder="Telefone (opcional)" value={telefoneEdit} onChange={(e) => setTelefoneEdit(e.target.value)} />
-        <input placeholder="Idade (opcional)" type="number" value={idadeEdit} onChange={(e) => setIdadeEdit(e.target.value)} style={{ marginLeft: 8, width: 130 }} />
-        {editandoId === null ? (
+        <input
+          placeholder="Telefone (opcional)"
+          value={telefoneEdit}
+          maxLength={15}
+          onChange={(e) => {
+            const soNumeros = e.target.value.replace(/\D/g, '').slice(0, 11);
+            let formatado = soNumeros;
+            if (soNumeros.length > 2) formatado = `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2)}`;
+            if (soNumeros.length > 7) formatado = `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2, 7)}-${soNumeros.slice(7)}`;
+            setTelefoneEdit(formatado);
+          }}
+/>
+/        {editandoId === null ? (
           <button onClick={cadastrar} style={{ marginLeft: 8, background: '#22c55e', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cadastrar</button>
         ) : (
           <>
@@ -193,8 +210,18 @@ export default function App() {
                   <input value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} placeholder="Nome" />
                   <input value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} placeholder="Email" />
                   <input value={telefoneEdit} onChange={(e) => setTelefoneEdit(e.target.value)} placeholder="Telefone" />
-                  <input value={idadeEdit} onChange={(e) => setIdadeEdit(e.target.value)} placeholder="Idade" type="number" />
-                </span>
+                  <input
+                    value={idadeEdit}
+                    onChange={(e) => {
+                      let valor = e.target.value.replace(/\D/g, '').slice(0, 3);
+                      if (valor !== '' && Number(valor) > 120) valor = '120';
+                      setIdadeEdit(valor);
+                    }}
+                    placeholder="Idade"
+                    type="number"
+                    min={0}
+                    max={120}
+                  />                </span>
               ) : (
                 <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>}</span>
               )}
