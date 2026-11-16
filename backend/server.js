@@ -51,9 +51,11 @@ async function criarTabela() {
       telefone VARCHAR(20),
       idade INT
     )`);
-
+    
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_email_unico ON pessoas (email)`);
+
 
     console.log('Tabela pessoas pronta');
   } catch (err) {
@@ -104,10 +106,15 @@ app.post('/pessoas', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro no banco' });
+  if (err.code === '23505') {
+    return res.status(400).json({ erro: 'Esse email já está cadastrado' });
   }
+  console.error(err);
+  res.status(500).json({ erro: 'Erro no banco' });
+}
+  
 });
+
 
 // PUT - Editar
 app.put('/pessoas/:id', async (req, res) => {
@@ -131,9 +138,12 @@ app.put('/pessoas/:id', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro no banco' });
+  if (err.code === '23505') {
+    return res.status(400).json({ erro: 'Esse email já está cadastrado' });
   }
+  console.error(err);
+  res.status(500).json({ erro: 'Erro no banco' });
+}
 });
 
 // DELETE - Deletar
