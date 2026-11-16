@@ -166,6 +166,28 @@ export default function App() {
     setAba('login')
   }
 
+  function fazerLogin() {
+    if (usuario === 'admin' && senha === '1234') {
+      setTipoUsuario('admin')
+      setLogadoNova(true)
+      setAba('admin')
+    } else if (usuario === 'compras' && senha === '1234') {
+      setTipoUsuario('compras')
+      setLogadoNova(true)
+      setAba('compras')
+      } else if (usuario === 'vendas' && senha === '1234') {
+      setTipoUsuario('vendas')
+      setLogadoNova(true)
+      setAba('vendas')
+    } else if (usuario === 'marketing' && senha === '1234') {
+      setTipoUsuario('marketing')
+      setLogadoNova(true)
+      setAba('marketing')
+    } else {
+      alert('Usuário ou senha errados!')
+    }
+  }
+
   const pessoasFiltradas = pessoas
     .filter((p) => p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase()))
     .sort((a, b) => {
@@ -188,11 +210,19 @@ export default function App() {
 
       {logadoNova && (
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          {tipoUsuario === 'admin' && (
-            <button onClick={() => setAba('admin')} style={{ marginRight: 8, background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Admin</button>
+          {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (
+            <button onClick={() => setAba('compras')} style={{ marginRight: 8, background: aba === 'compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Compras</button>
           )}
-          <button onClick={() => setAba('compras')} style={{ background: '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Compras</button>
-          <button onClick={sair} style={{ marginLeft: 8, background: '#6b7280', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Sair</button>
+          {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (
+            <button onClick={() => setAba('marketing')} style={{ marginRight: 8, background: aba === 'marketing' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Marketing</button>
+          )}
+          {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (
+            <button onClick={() => setAba('vendas')} style={{ marginRight: 8, background: aba === 'vendas' ? '#1bbe18' : '#ecb048', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>vendas</button>
+          )}
+          {tipoUsuario === 'admin' && (
+            <button onClick={() => setAba('admin')} style={{ marginRight: 8, background: aba === 'admin' ? '#1d4ed8' : '#3b82f6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Admin</button>
+          )}
+          <button onClick={sair} style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Sair</button>
         </div>
       )}
 
@@ -201,21 +231,9 @@ export default function App() {
           <h2>Login</h2>
           <input placeholder="Usuário" value={usuario} onChange={(e) => setUsuario(e.target.value)} />
           <br /><br />
-          <input placeholder="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          <input placeholder="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerLogin() }} />
           <br /><br />
-          <button onClick={() => {
-            if (usuario === 'admin' && senha === '1234') {
-              setTipoUsuario('admin')
-              setLogadoNova(true)
-              setAba('admin')
-            } else if (usuario === 'compras' && senha === '3455') {
-              setTipoUsuario('compras')
-              setLogadoNova(true)
-              setAba('compras')
-            } else {
-              alert('Usuário ou senha errados!')
-            }
-          }} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Entrar</button>
+          <button onClick={fazerLogin} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Entrar</button>
         </div>
       )}
 
@@ -283,6 +301,22 @@ export default function App() {
           <h2>Setor de Compras</h2>
           <p style={{ color: '#e5e7eb' }}>Bem-vindo ao setor de Compras!</p>
           <p style={{ color: '#e5e7eb' }}>Aqui vai ficar só o que é do setor de Compras.</p>
+        </div>
+      )}
+      {aba === 'vendas' && (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <h2>Setor de vendas</h2>
+          <p style={{ color: '#e5e7eb' }}>Bem-vindo ao setor de Vendas!</p>
+          <p style={{ color: '#e5e7eb' }}>Aqui vai ficar só o que é do setor de Vendas.</p>
+        </div>
+      )}
+
+      {aba === 'marketing' && (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <h2>Setor de Marketing</h2>
+          <p style={{ color: '#e5e7eb' }}>Bem-vindo ao setor de Marketing!</p>
+          <p style={{ color: '#e5e7eb' }}>Aqui vai ficar só o que é do setor de Marketing.</p>
+          <p style={{ color: '#e5e7eb' }}>Total de pessoas cadastradas: {pessoas.length}</p>
         </div>
       )}
 
