@@ -12,19 +12,18 @@ Write-Host "Abrindo frontend..."
 cmd /c start powershell -ExecutionPolicy Bypass -NoExit -File "$PSScriptRoot\start-frontend.ps1"
 
 Write-Host "Tudo subindo! Banco + Backend + Frontend"
+
+
 /*
 
-git pull
-docker ps
-docker compose up
-powershell -ExecutionPolicy Bypass -File .\.git\Start-tudo.ps1
-git add .
-git commit -m "o que mudou"
-git push
+Informações importantes:
+- O banco de dados está subindo na porta 5432, em outro pc precisa mudar a porta do banco no arquivo .env do backend.
+- banco de dados rodando na mesma porta, vai dar conflito. Então ou você para o outro banco ou muda a porta do postgres no docker-compose.yml.
+- Para mudar a porta do banco no docker-compose.yml.
+E também alterar a porta no arquivo .env do backend.
 
+Agora pra iniciar somente usar (docker compose up -d) e depois (docker compose down) pra parar tudo. 
+Já ta subindo tudo na docker então não precisa ir manual e nem no startudo.ps1 
 
 
 */
-/* PARA INICIAR TODO ARQUIVO USAR        (git pull)     */
-/* PARA INICIAR TODO ARQUIVO USAR        (     .\.git\Start-tudo.ps1     )     */                    */  
-
