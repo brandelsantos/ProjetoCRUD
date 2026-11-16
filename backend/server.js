@@ -22,7 +22,8 @@ function validarPessoa(nome, email, telefone, idade) {
     }
   }
   if (idade !== null && idade !== undefined && idade !== '') {
-    if (Number(idade) < 0 || Number(idade) > 120) {
+    const idadeNum = Number(idade);
+    if (isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
       return 'Idade tem que ser entre 0 e 120';
     }
   }
@@ -99,7 +100,7 @@ app.post('/pessoas', async (req, res) => {
     }
     const result = await pool.query(
       'INSERT INTO pessoas (nome, email, telefone, idade) VALUES ($1, $2, $3, $4) RETURNING *',
-      [nome, email, telefone || null, idade || null]
+      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -108,7 +109,7 @@ app.post('/pessoas', async (req, res) => {
   }
 });
 
-// PUT - Editar - AGORA SEM PUT DENTRO DE PUT
+// PUT - Editar
 app.put('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -121,7 +122,7 @@ app.put('/pessoas/:id', async (req, res) => {
 
     const result = await pool.query(
       'UPDATE pessoas SET nome = $1, email = $2, telefone = $3, idade = $4 WHERE id = $5 RETURNING *',
-      [nome, email, telefone || null, idade || null, id]
+      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, id]
     );
 
     if (result.rows.length === 0) {

@@ -9,7 +9,30 @@ type Pessoa = {
   idade?: number | null
 }
 
-const API = 'http://localhost:3001/pessoas'
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/pessoas`
+
+function validar(nome: string, email: string, telefone: string, idade: string) {
+  if (!nome.trim()) return 'Nome é obrigatório'
+  if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nome.trim())) return 'Nome não pode ter caracteres especiais, só letras e espaço'
+  if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) return 'Email inválido, tem que ser tipo nome@email.com'
+  if (telefone) {
+    const soNumeros = telefone.replace(/\D/g, '')
+    if (soNumeros.length < 10 || soNumeros.length > 11) return 'Telefone tem que ter 10 ou 11 dígitos'
+  }
+  if (idade !== '') {
+    const n = Number(idade)
+    if (isNaN(n) || n < 0 || n > 120) return 'Idade tem que ser entre 0 e 120'
+  }
+  return null
+}
+
+function formatarTelefone(valor: string) {
+  const soNumeros = valor.replace(/\D/g, '').slice(0, 11)
+  if (soNumeros.length <= 2) return soNumeros
+  if (soNumeros.length <= 6) return `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2)}`
+  if (soNumeros.length <= 10) return `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2, 6)}-${soNumeros.slice(6)}`
+  return `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2, 7)}-${soNumeros.slice(7)}`
+}
 
 export default function App() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
@@ -29,7 +52,12 @@ export default function App() {
       setCarregando(true)
       const res = await fetch(API)
       const data = await res.json()
-      setPessoas(data)
+      if (Array.isArray(data)) {
+        setPessoas(data)
+      } else {
+        setPessoas([])
+        setMensagem(data.erro || 'Backend respondeu, mas não veio lista')
+      }
     } catch {
       setMensagem('Erro ao carregar pessoas - backend não está rodando?')
     } finally {
@@ -37,19 +65,18 @@ export default function App() {
     }
   }
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => { carregar() }, [])
 
   async function cadastrar() {
-    if (!nomeEdit.trim()) { setMensagem('Nome é obrigatório'); return }
-    if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nomeEdit.trim())) { setMensagem('Nome não pode ter caracteres especiais, só letras e espaço'); return }
-    if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(emailEdit)) { setMensagem('Email inválido, tem que ser tipo nome@email.com'); return }
+    const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit)
+    if (erro) { setMensagem(erro); return }
     try {
       const res = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nome: nomeEdit,
-          email: emailEdit,
+          nome: nomeEdit.trim(),
+          email: emailEdit.trim(),
           telefone: telefoneEdit || null,
           idade: idadeEdit ? Number(idadeEdit) : null
         })
@@ -57,41 +84,33 @@ export default function App() {
       const data = await res.json()
       if (!res.ok) { setMensagem(data.erro || 'Erro ao cadastrar'); return }
       setMensagem('Cadastrado com sucesso!')
-      setNomeEdit('')
-      setEmailEdit('')
-      setTelefoneEdit('')
-      setIdadeEdit('')
+      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit('')
       carregar()
     } catch { setMensagem('Erro ao conectar no backend') }
   }
 
   async function salvarEdicao() {
-    if (editandoId !== null) {
-      if (!nomeEdit.trim()) { setMensagem('Nome é obrigatório'); return }
-      if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nomeEdit.trim())) { setMensagem('Nome não pode ter caracteres especiais, só letras e espaço'); return }
-      if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(emailEdit)) { setMensagem('Email inválido, tem que ser tipo nome@email.com'); return }
-      try {
-        const res = await fetch(`${API}/${editandoId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nome: nomeEdit,
-            email: emailEdit,
-            telefone: telefoneEdit || null,
-            idade: idadeEdit ? Number(idadeEdit) : null
-          })
+    if (editandoId === null) return
+    const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit)
+    if (erro) { setMensagem(erro); return }
+    try {
+      const res = await fetch(`${API}/${editandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: nomeEdit.trim(),
+          email: emailEdit.trim(),
+          telefone: telefoneEdit || null,
+          idade: idadeEdit ? Number(idadeEdit) : null
         })
-        const data = await res.json()
-        if (!res.ok) { setMensagem(data.erro || 'Erro ao editar'); return }
-        setMensagem('Editado com sucesso!')
-        setEditandoId(null)
-        setNomeEdit('')
-        setEmailEdit('')
-        setTelefoneEdit('')
-        setIdadeEdit('')
-        carregar()
-      } catch { setMensagem('Erro ao conectar no backend') }
-    }
+      })
+      const data = await res.json()
+      if (!res.ok) { setMensagem(data.erro || 'Erro ao editar'); return }
+      setMensagem('Editado com sucesso!')
+      setEditandoId(null)
+      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit('')
+      carregar()
+    } catch { setMensagem('Erro ao conectar no backend') }
   }
 
   async function deletar(id: number, nomePessoa: string) {
@@ -122,7 +141,7 @@ export default function App() {
     setNomeEdit(pessoa.nome)
     setEmailEdit(pessoa.email)
     setTelefoneEdit(pessoa.telefone || '')
-    setIdadeEdit(pessoa.idade ? String(pessoa.idade) : '')
+    setIdadeEdit(pessoa.idade != null ? String(pessoa.idade) : '')
     setMensagem('')
   }
 
@@ -155,29 +174,26 @@ export default function App() {
       </div>
 
       <div style={{ textAlign: 'center' }}>
-        <input 
-          placeholder="Nome" 
-          value={nomeEdit} 
-          onChange={(e) => setNomeEdit(e.target.value)} />
-        <input 
-          placeholder="Email" 
-          value={emailEdit} 
-          onChange={(e) => setEmailEdit(e.target.value)} 
-          style={{ marginLeft: 8 }} />
+        <input placeholder="Nome" value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} />
+        <input placeholder="Email" value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} style={{ marginLeft: 8 }} />
         <br /><br />
         <input
           placeholder="Telefone (opcional)"
           value={telefoneEdit}
-          maxLength={15}
+          onChange={(e) => setTelefoneEdit(formatarTelefone(e.target.value))}
+        />
+        <input
+          placeholder="Idade (opcional)"
+          value={idadeEdit}
           onChange={(e) => {
-            const soNumeros = e.target.value.replace(/\D/g, '').slice(0, 11);
-            let formatado = soNumeros;
-            if (soNumeros.length > 2) formatado = `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2)}`;
-            if (soNumeros.length > 7) formatado = `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2, 7)}-${soNumeros.slice(7)}`;
-            setTelefoneEdit(formatado);
+            let valor = e.target.value.replace(/\D/g, '').slice(0, 3)
+            if (valor !== '' && Number(valor) > 120) valor = '120'
+            setIdadeEdit(valor)
           }}
-/>
-/        {editandoId === null ? (
+          style={{ marginLeft: 8 }}
+        />
+        <br /><br />
+        {editandoId === null ? (
           <button onClick={cadastrar} style={{ marginLeft: 8, background: '#22c55e', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cadastrar</button>
         ) : (
           <>
@@ -188,8 +204,8 @@ export default function App() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} />
-        {busca && <button onClick={() => { setBusca(""); setPagina(1); }} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>}
+        <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1) }} />
+        {busca && <button onClick={() => { setBusca(''); setPagina(1) }} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>}
       </div>
 
       {mensagem && <p style={{ textAlign: 'center', background: mensagem.includes('sucesso') ? '#22c55e' : '#ef4444', color: '#ffffff', padding: '10px', borderRadius: 8, fontWeight: 600 }}>{mensagem}</p>}
@@ -205,38 +221,10 @@ export default function App() {
         <ul style={{ padding: 0 }}>
           {pessoasDaPagina.map((p) => (
             <li key={p.id} style={{ background: '#2e303a', padding: '12px 16px', borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
-              {editandoId === p.id ? (
-                <span>
-                  <input value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} placeholder="Nome" />
-                  <input value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} placeholder="Email" />
-                  <input value={telefoneEdit} onChange={(e) => setTelefoneEdit(e.target.value)} placeholder="Telefone" />
-                  <input
-                    value={idadeEdit}
-                    onChange={(e) => {
-                      let valor = e.target.value.replace(/\D/g, '').slice(0, 3);
-                      if (valor !== '' && Number(valor) > 120) valor = '120';
-                      setIdadeEdit(valor);
-                    }}
-                    placeholder="Idade"
-                    type="number"
-                    min={0}
-                    max={120}
-                  />                </span>
-              ) : (
-                <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>}</span>
-              )}
+              <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>}</span>
               <span>
-                {editandoId === p.id ? (
-                  <>
-                    <button onClick={salvarEdicao} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', marginRight: 6 }}>Salvar</button>
-                    <button onClick={cancelarEdicao} style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Cancelar</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', marginRight: 6 }}>Editar</button>
-                    <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
-                  </>
-                )}
+                <button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', marginRight: 6 }}>Editar</button>
+                <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
               </span>
             </li>
           ))}
@@ -249,5 +237,5 @@ export default function App() {
         <button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas} style={{ background: pagina === totalPaginas ? '#4b5563' : '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: pagina === totalPaginas ? 'not-allowed' : 'pointer', marginLeft: 8 }}>Proxima</button>
       </div>
     </div>
-  );
+  )
 }
