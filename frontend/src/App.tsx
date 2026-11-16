@@ -7,6 +7,7 @@ type Pessoa = {
   email: string
   telefone?: string | null
   idade?: number | null
+  setor?: string | null
 }
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/pessoas`
@@ -34,12 +35,20 @@ function formatarTelefone(valor: string) {
   return `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2, 7)}-${soNumeros.slice(7)}`
 }
 
+function corSetor(setor?: string | null) {
+  if (setor === 'compras') return '#8b5cf6'
+  if (setor === 'marketing') return '#ec4899'
+  if (setor === 'vendas') return '#22c55e'
+  return '#3b82f6'
+}
+
 export default function App() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [nomeEdit, setNomeEdit] = useState('')
   const [emailEdit, setEmailEdit] = useState('')
   const [telefoneEdit, setTelefoneEdit] = useState('')
   const [idadeEdit, setIdadeEdit] = useState('')
+  const [setorEdit, setSetorEdit] = useState('admin')
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [mensagem, setMensagem] = useState('')
   const [carregando, setCarregando] = useState(true)
@@ -83,13 +92,14 @@ export default function App() {
           nome: nomeEdit.trim(),
           email: emailEdit.trim(),
           telefone: telefoneEdit || null,
-          idade: idadeEdit ? Number(idadeEdit) : null
+          idade: idadeEdit ? Number(idadeEdit) : null,
+          setor: setorEdit
         })
       })
       const data = await res.json()
       if (!res.ok) { setMensagem(data.erro || 'Erro ao cadastrar'); return }
-      setMensagem('Cadastrado com sucesso!')
-      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit('')
+      setMensagem(`Cadastrado com sucesso para ${setorEdit}!`)
+      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin')
       carregar()
     } catch { setMensagem('Erro ao conectar no backend') }
   }
@@ -106,14 +116,15 @@ export default function App() {
           nome: nomeEdit.trim(),
           email: emailEdit.trim(),
           telefone: telefoneEdit || null,
-          idade: idadeEdit ? Number(idadeEdit) : null
+          idade: idadeEdit ? Number(idadeEdit) : null,
+          setor: setorEdit
         })
       })
       const data = await res.json()
       if (!res.ok) { setMensagem(data.erro || 'Erro ao editar'); return }
       setMensagem('Editado com sucesso!')
       setEditandoId(null)
-      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit('')
+      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin')
       carregar()
     } catch { setMensagem('Erro ao conectar no backend') }
   }
@@ -147,6 +158,7 @@ export default function App() {
     setEmailEdit(pessoa.email)
     setTelefoneEdit(pessoa.telefone || '')
     setIdadeEdit(pessoa.idade != null ? String(pessoa.idade) : '')
+    setSetorEdit(pessoa.setor || 'admin')
     setMensagem('')
   }
 
@@ -156,6 +168,7 @@ export default function App() {
     setEmailEdit('')
     setTelefoneEdit('')
     setIdadeEdit('')
+    setSetorEdit('admin')
   }
 
   function sair() {
@@ -195,10 +208,34 @@ export default function App() {
       return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase())
     })
 
+  // Cada setor só vê o dele. Quem é admin aparece em todo mundo.
+  const pessoasCompras = pessoasFiltradas.filter(p => (p.setor || 'admin') === 'compras' || (p.setor || 'admin') === 'admin')
+  const pessoasMarketing = pessoasFiltradas.filter(p => (p.setor || 'admin') === 'marketing' || (p.setor || 'admin') === 'admin')
+  const pessoasVendas = pessoasFiltradas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin')
+
   const porPagina = 5
   const totalPaginas = Math.max(1, Math.ceil(pessoasFiltradas.length / porPagina))
   const inicio = (pagina - 1) * porPagina
   const pessoasDaPagina = pessoasFiltradas.slice(inicio, inicio + porPagina)
+
+  function ListaSetor({ lista, titulo }: { lista: Pessoa[], titulo: string }) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: 20 }}>
+        <h2>{titulo}</h2>
+        <p style={{ color: '#e5e7eb' }}>Total nesse setor: {lista.length}</p>
+        {lista.length === 0 ? <p style={{ color: '#9ca3af' }}>Nenhuma pessoa cadastrada para esse setor ainda.</p> : (
+          <ul style={{ padding: 0, textAlign: 'left' }}>
+            {lista.map(p => (
+              <li key={p.id} style={{ background: '#2e303a', padding: '12px 16px', borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
+                <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade != null && <span> - {p.idade} anos</span>}</span>
+                <span style={{ background: corSetor(p.setor), color: '#fff', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>{p.setor || 'admin'}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div style={{ padding: 24, fontFamily: 'Arial', background: '#1f2028', maxWidth: 700, margin: '40px auto', borderRadius: 16, boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)' }}>
@@ -250,6 +287,14 @@ export default function App() {
               setIdadeEdit(valor)
             }} style={{ marginLeft: 8 }} />
             <br /><br />
+            <label style={{ color: '#e5e7eb', fontWeight: 600 }}>Vai para qual setor? </label>
+            <select value={setorEdit} onChange={(e) => setSetorEdit(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #4b5563', background: '#2e303a', color: '#fff', fontWeight: 600 }}>
+              <option value="admin">Todos / Admin - aparece em tudo</option>
+              <option value="compras">Só Compras</option>
+              <option value="marketing">Só Marketing</option>
+              <option value="vendas">Só Vendas</option>
+            </select>
+            <br /><br />
             {editandoId === null ? (
               <button onClick={cadastrar} style={{ marginLeft: 8, background: '#22c55e', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Cadastrar</button>
             ) : (
@@ -278,7 +323,7 @@ export default function App() {
             <ul style={{ padding: 0 }}>
               {pessoasDaPagina.map((p) => (
                 <li key={p.id} style={{ background: '#2e303a', padding: '12px 16px', borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
-                  <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>}</span>
+                  <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>} <span style={{ background: corSetor(p.setor), color: '#fff', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, marginLeft: 6, textTransform: 'uppercase' }}>{p.setor || 'admin'}</span></span>
                   <span>
                     <button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', marginRight: 6 }}>Editar</button>
                     <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
@@ -296,29 +341,9 @@ export default function App() {
         </div>
       )}
 
-      {aba === 'compras' && (
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <h2>Setor de Compras</h2>
-          <p style={{ color: '#e5e7eb' }}>Bem-vindo ao setor de Compras!</p>
-          <p style={{ color: '#e5e7eb' }}>Aqui vai ficar só o que é do setor de Compras.</p>
-        </div>
-      )}
-      {aba === 'vendas' && (
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <h2>Setor de vendas</h2>
-          <p style={{ color: '#e5e7eb' }}>Bem-vindo ao setor de Vendas!</p>
-          <p style={{ color: '#e5e7eb' }}>Aqui vai ficar só o que é do setor de Vendas.</p>
-        </div>
-      )}
-
-      {aba === 'marketing' && (
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <h2>Setor de Marketing</h2>
-          <p style={{ color: '#e5e7eb' }}>Bem-vindo ao setor de Marketing!</p>
-          <p style={{ color: '#e5e7eb' }}>Aqui vai ficar só o que é do setor de Marketing.</p>
-          <p style={{ color: '#e5e7eb' }}>Total de pessoas cadastradas: {pessoas.length}</p>
-        </div>
-      )}
+      {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
+      {aba === 'vendas' && <ListaSetor lista={pessoasVendas} titulo="Setor de vendas" />}
+      {aba === 'marketing' && <ListaSetor lista={pessoasMarketing} titulo="Setor de Marketing" />}
 
     </div>
   )

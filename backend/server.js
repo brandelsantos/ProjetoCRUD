@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Validação - bloqueia cadastro errado e limita telefone e idade
-function validarPessoa(nome, email, telefone, idade) {
+function validarPessoa(nome, email, telefone, idade, setor) {
   if (!nome || !nome.trim()) {
     return 'Nome é obrigatório';
   }
@@ -26,6 +26,10 @@ function validarPessoa(nome, email, telefone, idade) {
     if (isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
       return 'Idade tem que ser entre 0 e 120';
     }
+  }
+  const setoresValidos = ['admin', 'compras', 'marketing', 'vendas'];
+  if (setor && !setoresValidos.includes(setor)) {
+    return 'Setor inválido';
   }
   return null;
 }
@@ -49,13 +53,15 @@ async function criarTabela() {
       nome VARCHAR(100),
       email VARCHAR(100),
       telefone VARCHAR(20),
-      idade INT
+      idade INT,
+      setor VARCHAR(20) DEFAULT 'admin'
     )`);
     
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
+    await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS setor VARCHAR(20) DEFAULT 'admin'`);
+    await pool.query(`UPDATE pessoas SET setor = 'admin' WHERE setor IS NULL`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_email_unico ON pessoas (email)`);
-
 
     console.log('Tabela pessoas pronta');
   } catch (err) {
@@ -95,14 +101,14 @@ app.get('/pessoas/:id', async (req, res) => {
 // POST - Cadastrar
 app.post('/pessoas', async (req, res) => {
   try {
-    const { nome, email, telefone, idade } = req.body;
-    const erro = validarPessoa(nome, email, telefone, idade);
+    const { nome, email, telefone, idade, setor } = req.body;
+    const erro = validarPessoa(nome, email, telefone, idade, setor);
     if (erro) {
       return res.status(400).json({ erro });
     }
     const result = await pool.query(
-      'INSERT INTO pessoas (nome, email, telefone, idade) VALUES ($1, $2, $3, $4) RETURNING *',
-      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade]
+      'INSERT INTO pessoas (nome, email, telefone, idade, setor) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, setor || 'admin']
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -115,21 +121,20 @@ app.post('/pessoas', async (req, res) => {
   
 });
 
-
 // PUT - Editar
 app.put('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { nome, email, telefone, idade } = req.body;
+    const { nome, email, telefone, idade, setor } = req.body;
 
-    const erro = validarPessoa(nome, email, telefone, idade);
+    const erro = validarPessoa(nome, email, telefone, idade, setor);
     if (erro) {
       return res.status(400).json({ erro });
     }
 
     const result = await pool.query(
-      'UPDATE pessoas SET nome = $1, email = $2, telefone = $3, idade = $4 WHERE id = $5 RETURNING *',
-      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, id]
+      'UPDATE pessoas SET nome = $1, email = $2, telefone = $3, idade = $4, setor = $5 WHERE id = $6 RETURNING *',
+      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, setor || 'admin', id]
     );
 
     if (result.rows.length === 0) {
