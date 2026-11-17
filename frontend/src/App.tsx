@@ -200,42 +200,6 @@ export default function App() {
     setAba('login')
   }
 
-  function fazerLogin() {
-    if (usuario === 'admin' && senha === '1234') {
-      setTipoUsuario('admin')
-      setNomeLogado('Administrador')
-      setLogadoNova(true)
-      setAba('admin')
-    } else if (usuario === 'compras' && senha === '1234') {
-      setTipoUsuario('compras')
-      setNomeLogado('Setor Compras')
-      setLogadoNova(true)
-      setAba('compras')
-      } else if (usuario === 'vendas' && senha === '1234') {
-      setTipoUsuario('vendas')
-      setNomeLogado('Setor Vendas')
-      setLogadoNova(true)
-      setAba('vendas')
-    } else if (usuario === 'marketing' && senha === '1234') {
-      setTipoUsuario('marketing')
-      setNomeLogado('Setor Marketing')
-      setLogadoNova(true)
-      setAba('marketing')
-    } else {
-      // Login da pessoa cadastrada
-      const pessoa = pessoas.find(p => p.usuario === usuario.trim() && p.senha === senha)
-      if (pessoa) {
-        const setorPessoa = pessoa.setor || 'admin'
-        setTipoUsuario(setorPessoa)
-        setNomeLogado(pessoa.nome)
-        setLogadoNova(true)
-        setAba(setorPessoa)
-      } else {
-        alert('Usuário ou senha errados!')
-      }
-    }
-  }
-
   // DASHBOARD - contas
   const totalCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras').length
   const totalVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas').length
@@ -326,15 +290,29 @@ export default function App() {
           <p style={{ color: '#9ca3af', fontSize: 13 }}>Entre com o usuário do setor ou com o usuário da pessoa cadastrada</p>
           <input placeholder="Usuário" value={usuario} onChange={(e) => setUsuario(e.target.value)} />
           <br /><br />
-          <input placeholder="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerLogin() }} />
+          <input placeholder="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
           <br /><br />
-          <button onClick={fazerLogin} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Entrar</button>
+          <button onClick={async () => {
+            const res = await fetch(`${API.replace('/pessoas', '')}/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ usuario, senha })
+            })
+            const data = await res.json()
+            if (!res.ok) {
+              alert('Usuário ou senha errados!')
+              return
+            }
+            setTipoUsuario(data.tipo)
+            setNomeLogado(data.nome || usuario)
+            setLogadoNova(true)
+            setAba(data.tipo)
+          }}>Entrar</button>
         </div>
       )}
 
       {aba === 'admin' && (
         <div>
-          {/* DASHBOARD */}
           <div style={{ marginBottom: 20 }}>
             <h2 style={{ textAlign: 'center', marginBottom: 12 }}>📊 Dashboard</h2>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -368,7 +346,7 @@ export default function App() {
             <br /><br />
             <input placeholder="Usuário pra login - ex: joao.silva" value={usuarioEdit} onChange={(e) => setUsuarioEdit(e.target.value)} />
             <input placeholder="Senha pra login" type={mostrarSenha ? 'text' : 'password'} value={senhaEdit} onChange={(e) => setSenhaEdit(e.target.value)} style={{ marginLeft: 8 }} />
-            <button onClick={() => setMostrarSenha(!mostrarSenha)} style={{ marginLeft: 8, background: '#4b5563', color: '#fff', border: 'none', padding: '10px 10px', borderRadius: 8, cursor: 'pointer' }}>{mostrarSenha ? '🙈' : '👁️'}</button>
+            <button onClick={() => setMostrarSenha(!mostrarSenha)} style={{ marginLeft: 8, background: '#4b5563', color: '#fff', border: 'none', padding: '10px 10px', borderRadius: 8, cursor: 'pointer' }}>{mostrarSenha ? '🙈' : '👁'}</button>
             <br /><br />
             <label style={{ color: '#e5e7eb', fontWeight: 600 }}>Vai para qual setor? </label>
             <select value={setorEdit} onChange={(e) => setSetorEdit(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #4b5563', background: '#2e303a', color: '#fff', fontWeight: 600 }}>

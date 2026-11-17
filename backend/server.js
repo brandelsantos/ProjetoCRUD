@@ -12,7 +12,7 @@ function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
   if (!nome || !nome.trim()) {
     return 'Nome é obrigatório';
   }
-  if (!email || !email.includes('@')) {
+  if (!email || !email.includes ('@')) {
     return 'Email inválido, tem que ter @';
   }
   if (telefone) {
@@ -21,9 +21,9 @@ function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
       return 'Telefone tem que ter 10 ou 11 dígitos';
     }
   }
-  if (idade !== null && idade !== undefined && idade !== '') {
+  if (isNaN !== null && idade !== undefined && idade !== '') {
     const idadeNum = Number(idade);
-    if (isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
+    if (idade(idadeNum) || idadeNum < 0 || idadeNum > 120) {
       return 'Idade tem que ser entre 0 e 120';
     }
   }
@@ -61,16 +61,20 @@ pool.on('error', (err) => {
 
 async function criarTabela() {
   try {
-    await pool.query(`CREATE TABLE IF NOT EXISTS pessoas (
-      id SERIAL PRIMARY KEY,
-      nome VARCHAR(100),
-      email VARCHAR(100),
-      telefone VARCHAR(20),
-      idade INT,
-      setor VARCHAR(20) DEFAULT 'admin',
-      usuario VARCHAR(50),
-      senha VARCHAR(100)
-    )`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS usuarios (
+  id SERIAL PRIMARY KEY,
+  usuario VARCHAR(50) UNIQUE,
+  senha VARCHAR(100),
+  tipo VARCHAR(20) DEFAULT 'admin',
+  nome VARCHAR(100)
+)`);
+
+    await pool.query(`INSERT INTO usuarios (usuario, senha, tipo, nome) VALUES
+  ('admin', '1234', 'admin', 'Admin'),
+  ('compras', '1234', 'compras', 'Compras'),
+  ('vendas', '1234', 'vendas', 'Vendas'),
+  ('marketing', '1234', 'marketing', 'Marketing')
+  ON CONFLICT (usuario) DO NOTHING`);
     
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
@@ -100,6 +104,29 @@ app.get('/pessoas', async (req, res) => {
     res.status(500).json({ erro: 'Erro no banco' });
   }
 });
+
+app.post('/login', async (req, res) => {
+  try {
+    const { usuario, senha } = req.body
+    let result = await pool.query(
+      'SELECT usuario, tipo, usuario AS nome FROM usuarios WHERE usuario = $1 AND senha = $2',
+      [usuario, senha]
+    )
+    if (result.rows.length === 0) {
+      result = await pool.query(
+        'SELECT nome, setor AS tipo, usuario FROM pessoas WHERE usuario = $1 AND senha = $2',
+        [usuario, senha]
+      )
+    }
+    if (result.rows.length === 0) {
+      return res.status(401).json({ erro: 'Usuário ou senha errados!' })
+    }
+    res.json(result.rows[0])
+  } catch (err) {
+    console.error('Erro no login:', err.message)
+    res.status(500).json({ erro: 'Erro no banco no login' })
+  }
+})
 
 // GET - Buscar 1 por id
 app.get('/pessoas/:id', async (req, res) => {
