@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16
     container_name: starter_crud
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
@@ -9,30 +10,34 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     build: ./backend
     container_name: crud_backend
-    environment:
-      DB_USER: postgres
-      DB_PASSWORD: 1234
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: crudstarter9
-      PORT: 3001
-    ports:
-      - "3001:3001"
+    restart: always
     depends_on:
       - db
+    ports:
+      - "3001:3001"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 1234
+      DB_NAME: crudstarter9
+      PORT: 3001
 
   frontend:
     build: ./frontend
     container_name: crud_frontend
-    ports:
-      - "5173:5173"
+    restart: always
     depends_on:
       - backend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3001
 
 volumes:
-  pgdata:
+  postgres_data:
