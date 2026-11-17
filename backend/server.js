@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Validação - bloqueia cadastro errado e limita telefone e idade
-function validarPessoa(nome, email, telefone, idade, setor) {
+function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
   if (!nome || !nome.trim()) {
     return 'Nome é obrigatório';
   }
@@ -30,6 +30,19 @@ function validarPessoa(nome, email, telefone, idade, setor) {
   const setoresValidos = ['admin', 'compras', 'marketing', 'vendas'];
   if (setor && !setoresValidos.includes(setor)) {
     return 'Setor inválido';
+  }
+  if (usuario) {
+    if (usuario.trim().length < 3) {
+      return 'Usuário tem que ter no mínimo 3 letras';
+    }
+    if (!/^[A-Za-z0-9._-]+$/.test(usuario.trim())) {
+      return 'Usuário só pode ter letras, números, ponto, underline e traço';
+    }
+  }
+  if (senha) {
+    if (String(senha).length < 4) {
+      return 'Senha tem que ter no mínimo 4 caracteres';
+    }
   }
   return null;
 }
@@ -54,14 +67,19 @@ async function criarTabela() {
       email VARCHAR(100),
       telefone VARCHAR(20),
       idade INT,
-      setor VARCHAR(20) DEFAULT 'admin'
+      setor VARCHAR(20) DEFAULT 'admin',
+      usuario VARCHAR(50),
+      senha VARCHAR(100)
     )`);
     
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS setor VARCHAR(20) DEFAULT 'admin'`);
+    await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS usuario VARCHAR(50)`);
+    await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS senha VARCHAR(100)`);
     await pool.query(`UPDATE pessoas SET setor = 'admin' WHERE setor IS NULL`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_email_unico ON pessoas (email)`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_usuario_unico ON pessoas (usuario)`);
 
     console.log('Tabela pessoas pronta');
   } catch (err) {
@@ -101,18 +119,21 @@ app.get('/pessoas/:id', async (req, res) => {
 // POST - Cadastrar
 app.post('/pessoas', async (req, res) => {
   try {
-    const { nome, email, telefone, idade, setor } = req.body;
-    const erro = validarPessoa(nome, email, telefone, idade, setor);
+    const { nome, email, telefone, idade, setor, usuario, senha } = req.body;
+    const erro = validarPessoa(nome, email, telefone, idade, setor, usuario, senha);
     if (erro) {
       return res.status(400).json({ erro });
     }
     const result = await pool.query(
-      'INSERT INTO pessoas (nome, email, telefone, idade, setor) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, setor || 'admin']
+      'INSERT INTO pessoas (nome, email, telefone, idade, setor, usuario, senha) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, setor || 'admin', usuario ? usuario.trim() : null, senha || null]
     );
     res.json(result.rows[0]);
   } catch (err) {
   if (err.code === '23505') {
+    if (String(err.detail || '').includes('usuario')) {
+      return res.status(400).json({ erro: 'Esse usuário já está cadastrado' });
+    }
     return res.status(400).json({ erro: 'Esse email já está cadastrado' });
   }
   console.error(err);
@@ -125,16 +146,16 @@ app.post('/pessoas', async (req, res) => {
 app.put('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { nome, email, telefone, idade, setor } = req.body;
+    const { nome, email, telefone, idade, setor, usuario, senha } = req.body;
 
-    const erro = validarPessoa(nome, email, telefone, idade, setor);
+    const erro = validarPessoa(nome, email, telefone, idade, setor, usuario, senha);
     if (erro) {
       return res.status(400).json({ erro });
     }
 
     const result = await pool.query(
-      'UPDATE pessoas SET nome = $1, email = $2, telefone = $3, idade = $4, setor = $5 WHERE id = $6 RETURNING *',
-      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, setor || 'admin', id]
+      'UPDATE pessoas SET nome = $1, email = $2, telefone = $3, idade = $4, setor = $5, usuario = $6, senha = $7 WHERE id = $8 RETURNING *',
+      [nome.trim(), email.trim(), telefone || null, idade === '' ? null : idade, setor || 'admin', usuario ? usuario.trim() : null, senha || null, id]
     );
 
     if (result.rows.length === 0) {
@@ -144,6 +165,9 @@ app.put('/pessoas/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
   if (err.code === '23505') {
+    if (String(err.detail || '').includes('usuario')) {
+      return res.status(400).json({ erro: 'Esse usuário já está cadastrado' });
+    }
     return res.status(400).json({ erro: 'Esse email já está cadastrado' });
   }
   console.error(err);

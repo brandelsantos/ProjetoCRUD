@@ -8,11 +8,13 @@ type Pessoa = {
   telefone?: string | null
   idade?: number | null
   setor?: string | null
+  usuario?: string | null
+  senha?: string | null
 }
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/pessoas`
 
-function validar(nome: string, email: string, telefone: string, idade: string) {
+function validar(nome: string, email: string, telefone: string, idade: string, usuario: string, senha: string) {
   if (!nome.trim()) return 'Nome é obrigatório'
   if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nome.trim())) return 'Nome não pode ter caracteres especiais, só letras e espaço'
   if (!/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) return 'Email inválido, tem que ser tipo nome@email.com'
@@ -24,6 +26,11 @@ function validar(nome: string, email: string, telefone: string, idade: string) {
     const n = Number(idade)
     if (isNaN(n) || n < 0 || n > 120) return 'Idade tem que ser entre 0 e 120'
   }
+  if (!usuario.trim()) return 'Usuário é obrigatório pra pessoa conseguir logar'
+  if (usuario.trim().length < 3) return 'Usuário tem que ter no mínimo 3 letras'
+  if (!/^[A-Za-z0-9._-]+$/.test(usuario.trim())) return 'Usuário só pode ter letras, números, ponto, underline e traço'
+  if (!senha) return 'Senha é obrigatória pra pessoa conseguir logar'
+  if (senha.length < 4) return 'Senha tem que ter no mínimo 4 caracteres'
   return null
 }
 
@@ -49,6 +56,9 @@ export default function App() {
   const [telefoneEdit, setTelefoneEdit] = useState('')
   const [idadeEdit, setIdadeEdit] = useState('')
   const [setorEdit, setSetorEdit] = useState('admin')
+  const [usuarioEdit, setUsuarioEdit] = useState('')
+  const [senhaEdit, setSenhaEdit] = useState('')
+  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [mensagem, setMensagem] = useState('')
   const [carregando, setCarregando] = useState(true)
@@ -60,6 +70,7 @@ export default function App() {
   const [usuario, setUsuario] = useState('')
   const [senha, setSenha] = useState('')
   const [tipoUsuario, setTipoUsuario] = useState('')
+  const [nomeLogado, setNomeLogado] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('todos')
 
   async function carregar() {
@@ -83,7 +94,7 @@ export default function App() {
   useEffect(() => { carregar() }, [])
 
   async function cadastrar() {
-    const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit)
+    const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit, usuarioEdit, senhaEdit)
     if (erro) { setMensagem(erro); return }
     try {
       const res = await fetch(API, {
@@ -94,20 +105,22 @@ export default function App() {
           email: emailEdit.trim(),
           telefone: telefoneEdit || null,
           idade: idadeEdit ? Number(idadeEdit) : null,
-          setor: setorEdit
+          setor: setorEdit,
+          usuario: usuarioEdit.trim(),
+          senha: senhaEdit
         })
       })
       const data = await res.json()
       if (!res.ok) { setMensagem(data.erro || 'Erro ao cadastrar'); return }
-      setMensagem(`Cadastrado com sucesso para ${setorEdit}!`)
-      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin')
+      setMensagem(`Cadastrado com sucesso para ${setorEdit}! Usuário: ${usuarioEdit}`)
+      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin'); setUsuarioEdit(''); setSenhaEdit('')
       carregar()
     } catch { setMensagem('Erro ao conectar no backend') }
   }
 
   async function salvarEdicao() {
     if (editandoId === null) return
-    const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit)
+    const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit, usuarioEdit, senhaEdit)
     if (erro) { setMensagem(erro); return }
     try {
       const res = await fetch(`${API}/${editandoId}`, {
@@ -118,14 +131,16 @@ export default function App() {
           email: emailEdit.trim(),
           telefone: telefoneEdit || null,
           idade: idadeEdit ? Number(idadeEdit) : null,
-          setor: setorEdit
+          setor: setorEdit,
+          usuario: usuarioEdit.trim(),
+          senha: senhaEdit
         })
       })
       const data = await res.json()
       if (!res.ok) { setMensagem(data.erro || 'Erro ao editar'); return }
       setMensagem('Editado com sucesso!')
       setEditandoId(null)
-      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin')
+      setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin'); setUsuarioEdit(''); setSenhaEdit('')
       carregar()
     } catch { setMensagem('Erro ao conectar no backend') }
   }
@@ -160,6 +175,8 @@ export default function App() {
     setTelefoneEdit(pessoa.telefone || '')
     setIdadeEdit(pessoa.idade != null ? String(pessoa.idade) : '')
     setSetorEdit(pessoa.setor || 'admin')
+    setUsuarioEdit(pessoa.usuario || '')
+    setSenhaEdit(pessoa.senha || '')
     setMensagem('')
   }
 
@@ -170,6 +187,8 @@ export default function App() {
     setTelefoneEdit('')
     setIdadeEdit('')
     setSetorEdit('admin')
+    setUsuarioEdit('')
+    setSenhaEdit('')
   }
 
   function sair() {
@@ -177,28 +196,43 @@ export default function App() {
     setUsuario('')
     setSenha('')
     setTipoUsuario('')
+    setNomeLogado('')
     setAba('login')
   }
 
   function fazerLogin() {
     if (usuario === 'admin' && senha === '1234') {
       setTipoUsuario('admin')
+      setNomeLogado('Administrador')
       setLogadoNova(true)
       setAba('admin')
     } else if (usuario === 'compras' && senha === '1234') {
       setTipoUsuario('compras')
+      setNomeLogado('Setor Compras')
       setLogadoNova(true)
       setAba('compras')
       } else if (usuario === 'vendas' && senha === '1234') {
       setTipoUsuario('vendas')
+      setNomeLogado('Setor Vendas')
       setLogadoNova(true)
       setAba('vendas')
     } else if (usuario === 'marketing' && senha === '1234') {
       setTipoUsuario('marketing')
+      setNomeLogado('Setor Marketing')
       setLogadoNova(true)
       setAba('marketing')
     } else {
-      alert('Usuário ou senha errados!')
+      // Login da pessoa cadastrada
+      const pessoa = pessoas.find(p => p.usuario === usuario.trim() && p.senha === senha)
+      if (pessoa) {
+        const setorPessoa = pessoa.setor || 'admin'
+        setTipoUsuario(setorPessoa)
+        setNomeLogado(pessoa.nome)
+        setLogadoNova(true)
+        setAba(setorPessoa)
+      } else {
+        alert('Usuário ou senha errados!')
+      }
     }
   }
 
@@ -210,7 +244,7 @@ export default function App() {
 
   const pessoasFiltradas = pessoas
     .filter((p) => {
-      const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase())
+      const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase()) || (p.usuario || '').toLowerCase().includes(busca.toLowerCase())
       const bateSetor = filtroSetor === 'todos' || (p.setor || 'admin') === filtroSetor
       return bateBusca && bateSetor
     })
@@ -233,12 +267,12 @@ export default function App() {
     return (
       <div style={{ textAlign: 'center', marginTop: 20 }}>
         <h2>{titulo}</h2>
-        <p style={{ color: '#e5e7eb' }}>Total nesse setor: {lista.length}</p>
+        <p style={{ color: '#e5e7eb' }}>Olá, {nomeLogado}! Total nesse setor: {lista.length}</p>
         {lista.length === 0 ? <p style={{ color: '#9ca3af' }}>Nenhuma pessoa cadastrada para esse setor ainda.</p> : (
           <ul style={{ padding: 0, textAlign: 'left' }}>
             {lista.map(p => (
               <li key={p.id} style={{ background: '#2e303a', padding: '12px 16px', borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
-                <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade != null && <span> - {p.idade} anos</span>}</span>
+                <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade != null && <span> - {p.idade} anos</span>}{p.usuario && <span> - @{p.usuario}</span>}</span>
                 <span style={{ background: corSetor(p.setor), color: '#fff', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>{p.setor || 'admin'}</span>
               </li>
             ))}
@@ -265,6 +299,7 @@ export default function App() {
         <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
         <h1 style={{ lineHeight: 1.2, marginTop: 16, marginBottom: 8, fontSize: 32, whiteSpace: 'normal' }}>Cadastro de Pessoas - CRUD</h1>
         <p style={{ color: '#e5e7eb', fontSize: 16, fontWeight: 600, marginTop: 4 }}>Total: {pessoas.length} pessoas</p>
+        {logadoNova && <p style={{ color: '#22c55e', fontWeight: 700 }}>Logado como: {nomeLogado} ({tipoUsuario})</p>}
       </div>
 
       {logadoNova && (
@@ -288,6 +323,7 @@ export default function App() {
       {aba === 'login' && (
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <h2>Login</h2>
+          <p style={{ color: '#9ca3af', fontSize: 13 }}>Entre com o usuário do setor ou com o usuário da pessoa cadastrada</p>
           <input placeholder="Usuário" value={usuario} onChange={(e) => setUsuario(e.target.value)} />
           <br /><br />
           <input placeholder="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerLogin() }} />
@@ -330,6 +366,10 @@ export default function App() {
               setIdadeEdit(valor)
             }} style={{ marginLeft: 8 }} />
             <br /><br />
+            <input placeholder="Usuário pra login - ex: joao.silva" value={usuarioEdit} onChange={(e) => setUsuarioEdit(e.target.value)} />
+            <input placeholder="Senha pra login" type={mostrarSenha ? 'text' : 'password'} value={senhaEdit} onChange={(e) => setSenhaEdit(e.target.value)} style={{ marginLeft: 8 }} />
+            <button onClick={() => setMostrarSenha(!mostrarSenha)} style={{ marginLeft: 8, background: '#4b5563', color: '#fff', border: 'none', padding: '10px 10px', borderRadius: 8, cursor: 'pointer' }}>{mostrarSenha ? '🙈' : '👁️'}</button>
+            <br /><br />
             <label style={{ color: '#e5e7eb', fontWeight: 600 }}>Vai para qual setor? </label>
             <select value={setorEdit} onChange={(e) => setSetorEdit(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #4b5563', background: '#2e303a', color: '#fff', fontWeight: 600 }}>
               <option value="admin">Todos / Admin - aparece em tudo</option>
@@ -349,7 +389,7 @@ export default function App() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: 16 }}>
-            <input placeholder="Buscar por nome ou email..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1) }} />
+            <input placeholder="Buscar por nome, email ou usuário..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1) }} />
             {busca && <button onClick={() => { setBusca(''); setPagina(1) }} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>}
           </div>
 
@@ -366,7 +406,7 @@ export default function App() {
             <ul style={{ padding: 0 }}>
               {pessoasDaPagina.map((p) => (
                 <li key={p.id} style={{ background: '#2e303a', padding: '12px 16px', borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
-                  <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>} <span style={{ background: corSetor(p.setor), color: '#fff', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, marginLeft: 6, textTransform: 'uppercase' }}>{p.setor || 'admin'}</span></span>
+                  <span>{p.nome} - {p.email}{p.telefone && <span> - {p.telefone}</span>}{p.idade !== null && p.idade !== undefined && <span> - {p.idade} anos</span>}{p.usuario && <span> - @{p.usuario}</span>} <span style={{ background: corSetor(p.setor), color: '#fff', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, marginLeft: 6, textTransform: 'uppercase' }}>{p.setor || 'admin'}</span></span>
                   <span>
                     <button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', marginRight: 6 }}>Editar</button>
                     <button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>Deletar</button>
