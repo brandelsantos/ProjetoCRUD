@@ -60,6 +60,7 @@ export default function App() {
   const [usuario, setUsuario] = useState('')
   const [senha, setSenha] = useState('')
   const [tipoUsuario, setTipoUsuario] = useState('')
+  const [filtroSetor, setFiltroSetor] = useState('todos')
 
   async function carregar() {
     try {
@@ -201,17 +202,27 @@ export default function App() {
     }
   }
 
+  // DASHBOARD - contas
+  const totalCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras').length
+  const totalVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas').length
+  const totalMarketing = pessoas.filter(p => (p.setor || 'admin') === 'marketing').length
+  const totalAdmin = pessoas.filter(p => (p.setor || 'admin') === 'admin').length
+
   const pessoasFiltradas = pessoas
-    .filter((p) => p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase()))
+    .filter((p) => {
+      const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase())
+      const bateSetor = filtroSetor === 'todos' || (p.setor || 'admin') === filtroSetor
+      return bateBusca && bateSetor
+    })
     .sort((a, b) => {
       if (!ordenarPorNome) return 0
       return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase())
     })
 
   // Cada setor só vê o dele. Quem é admin aparece em todo mundo.
-  const pessoasCompras = pessoasFiltradas.filter(p => (p.setor || 'admin') === 'compras' || (p.setor || 'admin') === 'admin')
-  const pessoasMarketing = pessoasFiltradas.filter(p => (p.setor || 'admin') === 'marketing' || (p.setor || 'admin') === 'admin')
-  const pessoasVendas = pessoasFiltradas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin')
+  const pessoasCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras' || (p.setor || 'admin') === 'admin')
+  const pessoasMarketing = pessoas.filter(p => (p.setor || 'admin') === 'marketing' || (p.setor || 'admin') === 'admin')
+  const pessoasVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin')
 
   const porPagina = 5
   const totalPaginas = Math.max(1, Math.ceil(pessoasFiltradas.length / porPagina))
@@ -234,6 +245,17 @@ export default function App() {
           </ul>
         )}
       </div>
+    )
+  }
+
+  function CardDashboard({ titulo, valor, cor, ativo, aoClicar, emoji }: { titulo: string, valor: number, cor: string, ativo: boolean, aoClicar: () => void, emoji: string }) {
+    return (
+      <button onClick={() => { aoClicar(); setPagina(1) }} style={{ background: ativo ? cor : '#2e303a', color: '#fff', border: ativo ? `2px solid ${cor}` : '1px solid #4b5563', padding: '16px 12px', borderRadius: 12, cursor: 'pointer', flex: 1, minWidth: 120, textAlign: 'center' }}>
+        <div style={{ fontSize: 26 }}>{emoji}</div>
+        <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.1 }}>{valor}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>{titulo}</div>
+        <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>{ativo ? 'Filtrando • Clique pra limpar' : 'Clique pra filtrar'}</div>
+      </button>
     )
   }
 
@@ -276,6 +298,27 @@ export default function App() {
 
       {aba === 'admin' && (
         <div>
+          {/* DASHBOARD */}
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{ textAlign: 'center', marginBottom: 12 }}>📊 Dashboard</h2>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <CardDashboard titulo="TOTAL" valor={pessoas.length} cor="#3b82f6" ativo={filtroSetor === 'todos'} aoClicar={() => setFiltroSetor('todos')} emoji="👥" />
+              <CardDashboard titulo="COMPRAS" valor={totalCompras} cor="#8b5cf6" ativo={filtroSetor === 'compras'} aoClicar={() => setFiltroSetor(filtroSetor === 'compras' ? 'todos' : 'compras')} emoji="🛒" />
+              <CardDashboard titulo="VENDAS" valor={totalVendas} cor="#22c55e" ativo={filtroSetor === 'vendas'} aoClicar={() => setFiltroSetor(filtroSetor === 'vendas' ? 'todos' : 'vendas')} emoji="💰" />
+              <CardDashboard titulo="MARKETING" valor={totalMarketing} cor="#ec4899" ativo={filtroSetor === 'marketing'} aoClicar={() => setFiltroSetor(filtroSetor === 'marketing' ? 'todos' : 'marketing')} emoji="📣" />
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+              <div style={{ background: '#2e303a', border: '1px solid #4b5563', padding: '10px 12px', borderRadius: 10, flex: 1, textAlign: 'center', color: '#e5e7eb', fontSize: 13 }}>
+                <b>Todos / Admin:</b> {totalAdmin} pessoas aparecem em todos os setores
+              </div>
+            </div>
+            {filtroSetor !== 'todos' && (
+              <p style={{ textAlign: 'center', color: '#fbbf24', fontWeight: 700, marginTop: 10 }}>
+                Filtrando por: {filtroSetor.toUpperCase()} • <span onClick={() => setFiltroSetor('todos')} style={{ textDecoration: 'underline', cursor: 'pointer' }}>Limpar filtro</span>
+              </p>
+            )}
+          </div>
+
           <div style={{ textAlign: 'center' }}>
             <input placeholder="Nome" value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} />
             <input placeholder="Email" value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} style={{ marginLeft: 8 }} />
@@ -312,7 +355,7 @@ export default function App() {
 
           {mensagem && <p style={{ textAlign: 'center', background: mensagem.includes('sucesso') ? '#22c55e' : '#ef4444', color: '#ffffff', padding: '10px', borderRadius: 8, fontWeight: 600 }}>{mensagem}</p>}
 
-          <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>Mostrando {pessoasDaPagina.length} de {pessoas.length} pessoas</p>
+          <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>Mostrando {pessoasDaPagina.length} de {pessoasFiltradas.length} pessoas {filtroSetor !== 'todos' ? `(filtro: ${filtroSetor})` : ''}</p>
 
           <div style={{ textAlign: 'center' }}>
             <button onClick={() => setOrdenarPorNome(!ordenarPorNome)} style={{ background: '#1f2028', color: '#ffffff', border: '1px solid #4b5563', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', marginTop: 8 }}>{ordenarPorNome ? 'Ordenado A-Z' : 'Ordenar A-Z'}</button>
