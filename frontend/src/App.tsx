@@ -412,11 +412,27 @@ export default function App() {
                     {/* ABA DE MARKETING PARA MOSTRAR OQ ELE VÊ*/}
       {aba === 'marketing' && (
         <div>
-        <div style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', padding: 20, borderRadius: 16, textAlign: 'center', color: '#fff', marginTop: 20 }}>
-          <h2 style={{ margin: 0 }}>{propaganda.titulo}</h2>
-          <p style={{ fontSize: 16, marginTop: 8 }}>{propaganda.texto}</p>
-          <p style={{ fontSize: 12, opacity: 0.8 }}>Se você não comprou, saiba que só você não tem!</p>
-        </div>
+        {/* INÍCIO DO BANNER CLICÁVEL - SÓ MARKETING VÊ */}
+<div
+  onClick={() => window.open('https://www.youtube.com/', '_blank')}
+  style={{ position: 'relative', width: '100%', margin: 0, overflow: 'hidden', borderRadius: 0, display: 'block', cursor: 'pointer' }}
+>
+  <img src="/sua-foto.jpg" alt="Marketing Ideal Para Você" style={{ width: '100%', display: 'block', minHeight: 320, objectFit: 'cover' }} />
+
+  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: '#5a5a5a', color: '#fff', padding: '16px 20px', fontSize: 28, fontWeight: 800, boxSizing: 'border-box' }}>
+    MARKETING IDEAL PARA VOCÊ!
+  </div>
+
+  <div style={{ position: 'absolute', left: 20, bottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <a href="#sobre" onClick={(e) => e.stopPropagation()} style={{ background: '#6b6b6b', color: '#fff', textDecoration: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content' }}>
+      ⓘ Sobre nós
+    </a>
+    <a href="https://wa.me/5592992984883080" target="_blank" onClick={(e) => e.stopPropagation()} style={{ background: '#6b6b6b', color: '#fff', textDecoration: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content' }}>
+      ✆ Entre em contato
+    </a>
+  </div>
+</div>
+{/* FIM DO BANNER */}
 
         <ListaSetor lista={pessoasMarketing} titulo="Setor de Marketing" />
       </div>
