@@ -72,6 +72,9 @@ export default function App() {
   const [tipoUsuario, setTipoUsuario] = useState('')
   const [nomeLogado, setNomeLogado] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('todos')
+  const [tituloPropaganda, setTituloPropaganda]= useState('')
+  const [textoPropaganda,setTextoPropaganda] = useState('')
+  const [propaganda, setPropaganda] = useState({ titulo: 'Melhor câmera do mundo!', texto: 'Tecpix a mais vendida do mercado!' })
 
   async function carregar() {
     try {
@@ -404,8 +407,20 @@ export default function App() {
 
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
       {aba === 'vendas' && <ListaSetor lista={pessoasVendas} titulo="Setor de vendas" />}
-      {aba === 'marketing' && <ListaSetor lista={pessoasMarketing} titulo="Setor de Marketing" />}
 
-    </div>
-  )
+
+                    {/* ABA DE MARKETING PARA MOSTRAR OQ ELE VÊ*/}
+      {aba === 'marketing' && (
+        <div>
+        <div style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', padding: 20, borderRadius: 16, textAlign: 'center', color: '#fff', marginTop: 20 }}>
+          <h2 style={{ margin: 0 }}>{propaganda.titulo}</h2>
+          <p style={{ fontSize: 16, marginTop: 8 }}>{propaganda.texto}</p>
+          <p style={{ fontSize: 12, opacity: 0.8 }}>Se você não comprou, saiba que só você não tem!</p>
+        </div>
+
+        <ListaSetor lista={pessoasMarketing} titulo="Setor de Marketing" />
+      </div>
+    )}
+        </div>
+      )
 }

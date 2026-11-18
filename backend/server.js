@@ -88,7 +88,7 @@ async function criarTabela() {
       ('marketing', '1234', 'marketing', 'Marketing')
       ON CONFLICT (usuario) DO NOTHING`);
       
-// TABELA DE PRODUTOS AINDA EM TESTE TURURUU
+// TABELA DE PRODUTOS - AINDA EM TESTE TURURUU
     await pool.query(`CREATE TABLE IF NOT EXISTS produtos (
       id SERIAL PRIMARY KEY,
       nome VARCHAR(100) NOT NULL,
@@ -117,7 +117,7 @@ async function criarTabela() {
 
 criarTabela();
 
-// GET - Buscar todos
+// GET - BUSCAR TODOS
 app.get('/pessoas', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM pessoas ORDER BY id');
