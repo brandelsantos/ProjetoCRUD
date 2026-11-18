@@ -87,6 +87,15 @@ async function criarTabela() {
       ('vendas', '1234', 'vendas', 'Vendas'),
       ('marketing', '1234', 'marketing', 'Marketing')
       ON CONFLICT (usuario) DO NOTHING`);
+      
+// TABELA DE PRODUTOS AINDA EM TESTE TURURUU
+    await pool.query(`CREATE TABLE IF NOT EXISTS produtos (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL,
+      preco NUMERIC(10,2) NOT NULL DEFAULT 0,
+      quantidade INT NOT NULL DEFAULT 0,
+      setor VARCHAR(20) DEFAULT 'admin'
+    )`);
     
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
@@ -97,6 +106,8 @@ async function criarTabela() {
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_email_unico ON pessoas (email)`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_usuario_unico ON pessoas (usuario)`);
 
+
+    
     console.log('Tabela pessoas pronta');
   } catch (err) {
     console.error('Erro ao criar tabela, tentando de novo em 3s:', err.message);
@@ -226,6 +237,50 @@ app.delete('/pessoas/:id', async (req, res) => {
       return res.status(404).json({ erro: 'Pessoa não encontrada' });
     }
 
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+// PRODUTOS - Buscar todos
+app.get('/produtos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM produtos ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+// PRODUTOS - Cadastrar
+app.post('/produtos', async (req, res) => {
+  try {
+    const { nome, preco, quantidade, setor } = req.body;
+    if (!nome || !nome.trim()) {
+      return res.status(400).json({ erro: 'Nome do produto é obrigatório' });
+    }
+    const result = await pool.query(
+      'INSERT INTO produtos (nome, preco, quantidade, setor) VALUES ($1, $2, $3, $4) RETURNING *',
+      [nome.trim(), preco || 0, quantidade || 0, setor || 'admin']
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+// PRODUTOS - Deletar
+app.delete('/produtos/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const result = await pool.query('DELETE FROM produtos WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Produto não encontrado' });
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
