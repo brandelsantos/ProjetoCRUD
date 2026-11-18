@@ -2,8 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-
 const app = express();
+
+
 app.use(cors());
 app.use(express.json());
 
@@ -12,7 +13,7 @@ function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
   if (!nome || !nome.trim()) {
     return 'Nome é obrigatório';
   }
-  if (!email || !email.includes ('@')) {
+  if (!email || !email.includes('@')) {
     return 'Email inválido, tem que ter @';
   }
   if (telefone) {
@@ -21,9 +22,9 @@ function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
       return 'Telefone tem que ter 10 ou 11 dígitos';
     }
   }
-  if (isNaN !== null && idade !== undefined && idade !== '') {
+  if (idade !== null && idade !== undefined && idade !== '') {
     const idadeNum = Number(idade);
-    if (idade(idadeNum) || idadeNum < 0 || idadeNum > 120) {
+    if (isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
       return 'Idade tem que ser entre 0 e 120';
     }
   }
@@ -61,20 +62,31 @@ pool.on('error', (err) => {
 
 async function criarTabela() {
   try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS pessoas (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL,
+      email VARCHAR(100) NOT NULL,
+      telefone VARCHAR(20),
+      idade INT,
+      setor VARCHAR(20) DEFAULT 'admin',
+      usuario VARCHAR(50),
+      senha VARCHAR(100)
+    )`);
+
     await pool.query(`CREATE TABLE IF NOT EXISTS usuarios (
-  id SERIAL PRIMARY KEY,
-  usuario VARCHAR(50) UNIQUE,
-  senha VARCHAR(100),
-  tipo VARCHAR(20) DEFAULT 'admin',
-  nome VARCHAR(100)
-)`);
+      id SERIAL PRIMARY KEY,
+      usuario VARCHAR(50) UNIQUE,
+      senha VARCHAR(100),
+      tipo VARCHAR(20) DEFAULT 'admin',
+      nome VARCHAR(100)
+    )`);
 
     await pool.query(`INSERT INTO usuarios (usuario, senha, tipo, nome) VALUES
-  ('admin', '1234', 'admin', 'Admin'),
-  ('compras', '1234', 'compras', 'Compras'),
-  ('vendas', '1234', 'vendas', 'Vendas'),
-  ('marketing', '1234', 'marketing', 'Marketing')
-  ON CONFLICT (usuario) DO NOTHING`);
+      ('admin', '1234', 'admin', 'Admin'),
+      ('compras', '1234', 'compras', 'Compras'),
+      ('vendas', '1234', 'vendas', 'Vendas'),
+      ('marketing', '1234', 'marketing', 'Marketing')
+      ON CONFLICT (usuario) DO NOTHING`);
     
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
@@ -109,7 +121,7 @@ app.post('/login', async (req, res) => {
   try {
     const { usuario, senha } = req.body
     let result = await pool.query(
-      'SELECT usuario, tipo, usuario AS nome FROM usuarios WHERE usuario = $1 AND senha = $2',
+      'SELECT usuario, tipo, nome FROM usuarios WHERE usuario = $1 AND senha = $2',
       [usuario, senha]
     )
     if (result.rows.length === 0) {
@@ -157,16 +169,15 @@ app.post('/pessoas', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-  if (err.code === '23505') {
-    if (String(err.detail || '').includes('usuario')) {
-      return res.status(400).json({ erro: 'Esse usuário já está cadastrado' });
+    if (err.code === '23505') {
+      if (String(err.detail || '').includes('usuario')) {
+        return res.status(400).json({ erro: 'Esse usuário já está cadastrado' });
+      }
+      return res.status(400).json({ erro: 'Esse email já está cadastrado' });
     }
-    return res.status(400).json({ erro: 'Esse email já está cadastrado' });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
   }
-  console.error(err);
-  res.status(500).json({ erro: 'Erro no banco' });
-}
-  
 });
 
 // PUT - Editar
@@ -191,15 +202,15 @@ app.put('/pessoas/:id', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-  if (err.code === '23505') {
-    if (String(err.detail || '').includes('usuario')) {
-      return res.status(400).json({ erro: 'Esse usuário já está cadastrado' });
+    if (err.code === '23505') {
+      if (String(err.detail || '').includes('usuario')) {
+        return res.status(400).json({ erro: 'Esse usuário já está cadastrado' });
+      }
+      return res.status(400).json({ erro: 'Esse email já está cadastrado' });
     }
-    return res.status(400).json({ erro: 'Esse email já está cadastrado' });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no banco' });
   }
-  console.error(err);
-  res.status(500).json({ erro: 'Erro no banco' });
-}
 });
 
 // DELETE - Deletar
