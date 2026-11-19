@@ -4,7 +4,6 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const app = express();
 
-
 app.use(cors());
 app.use(express.json());
 
@@ -87,6 +86,39 @@ async function criarTabela() {
       ('vendas', '1234', 'vendas', 'Vendas'),
       ('marketing', '1234', 'marketing', 'Marketing')
       ON CONFLICT (usuario) DO NOTHING`);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS leads (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL,
+      whatsapp VARCHAR(20) NOT NULL,
+      precisa VARCHAR(100) NOT NULL,
+      criado_em TIMESTAMP DEFAULT NOW()
+    )
+`);
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS acessos_perfil (
+    id SERIAL PRIMARY KEY,
+    quem_viu_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
+    quem_viu_nome VARCHAR(100),
+    perfil_id INTEGER REFERENCES perfil_usuario(id) ON DELETE CASCADE,
+    perfil_nome VARCHAR(100),
+    criado_em TIMESTAMP DEFAULT NOW()
+  )
+`);
+
+    // TABELA PERFIL_USUARIO - PERFIL DE VERDADE, NÃO CÓPIA DE PRODUTO
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS perfil_usuario (
+        id SERIAL PRIMARY KEY,
+        pessoa_id INTEGER UNIQUE REFERENCES pessoas(id) ON DELETE CASCADE,
+        foto VARCHAR(255) DEFAULT '/desenho.webp',
+        bio TEXT DEFAULT '',
+        cargo VARCHAR(100) DEFAULT '',
+        instagram VARCHAR(100) DEFAULT '',
+        whatsapp VARCHAR(20) DEFAULT ''
+      )
+    `);
       
 // TABELA DE PRODUTOS - AINDA EM TESTE TURURUU
     await pool.query(`CREATE TABLE IF NOT EXISTS produtos (
@@ -105,7 +137,6 @@ async function criarTabela() {
     await pool.query(`UPDATE pessoas SET setor = 'admin' WHERE setor IS NULL`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_email_unico ON pessoas (email)`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_usuario_unico ON pessoas (usuario)`);
-
 
     
     console.log('Tabela pessoas pronta');
@@ -128,26 +159,144 @@ app.get('/pessoas', async (req, res) => {
   }
 });
 
+// LOGIN - ÚNICO, SEM DUPLICATA - AQUI VAI O res.json COM id
 app.post('/login', async (req, res) => {
   try {
     const { usuario, senha } = req.body
+
+    // 1 - olha na tabela usuarios (os fixos)
     let result = await pool.query(
       'SELECT usuario, tipo, nome FROM usuarios WHERE usuario = $1 AND senha = $2',
       [usuario, senha]
     )
-    if (result.rows.length === 0) {
-      result = await pool.query(
-        'SELECT nome, setor AS tipo, usuario FROM pessoas WHERE usuario = $1 AND senha = $2',
-        [usuario, senha]
-      )
+    if (result.rows.length > 0) {
+      // Fixo não tem id de pessoa, então não manda id
+      return res.json({ tipo: result.rows[0].tipo, nome: result.rows[0].nome || result.rows[0].usuario })
     }
+
+    // 2 - olha na tabela pessoas (os cadastrados) - AQUI TEM O id
+    result = await pool.query(
+      'SELECT id, nome, setor AS tipo, usuario FROM pessoas WHERE usuario = $1 AND senha = $2',
+      [usuario, senha]
+    )
     if (result.rows.length === 0) {
       return res.status(401).json({ erro: 'Usuário ou senha errados!' })
     }
-    res.json(result.rows[0])
+
+    // AQUI É O res.json QUE VOCÊ PERGUNTOU - COM id
+    return res.json({ tipo: result.rows[0].tipo, nome: result.rows[0].nome, id: result.rows[0].id })
   } catch (err) {
     console.error('Erro no login:', err.message)
     res.status(500).json({ erro: 'Erro no banco no login' })
+  }
+})
+
+// BUSCAR PERFIL DE UMA PESSOA
+app.get('/perfil/:pessoa_id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM perfil_usuario WHERE pessoa_id = $1', [req.params.pessoa_id])
+    res.json(result.rows[0] || null)
+  } catch (e) {
+    res.status(500).json({ erro: 'Erro ao buscar perfil' })
+  }
+})
+// REGISTRAR QUE ALGUÉM VIU UM PERFIL
+app.post('/perfil', async (req, res) => {
+  try {
+    // TRAVA: só admin pode salvar perfil
+    if (req.body.tipo !== 'admin') {
+      return res.status(403).json({ erro: 'Só o admin pode editar perfil.' })
+    }
+    const { pessoa_id, foto, bio, cargo, instagram, whatsapp } = req.body
+    if (!pessoa_id) return res.status(400).json({ erro: 'Falta pessoa_id' })
+    const existe = await pool.query('SELECT id FROM perfil_usuario WHERE pessoa_id = $1', [pessoa_id])
+    let result
+    if (existe.rows.length > 0) {
+      result = await pool.query(
+        'UPDATE perfil_usuario SET foto=$1, bio=$2, cargo=$3, instagram=$4, whatsapp=$5 WHERE pessoa_id=$6 RETURNING *',
+        [foto || '', bio || '', cargo || '', instagram || '', whatsapp || '', pessoa_id]
+      )
+    } else {
+      result = await pool.query(
+        'INSERT INTO perfil_usuario (pessoa_id, foto, bio, cargo, instagram, whatsapp) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+        [pessoa_id, foto || '', bio || '', cargo || '', instagram || '', whatsapp || '']
+      )
+    }
+    res.json(result.rows[0])
+  } catch (e) { console.log(e); res.status(500).json({ erro: 'Erro ao salvar perfil' }) }
+})
+
+// LISTAR ACESSOS - SÓ ADMIN VÊ
+app.get('/acessos-perfil', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM acessos_perfil ORDER BY id DESC LIMIT 50')
+    res.json(result.rows)
+  } catch (e) {
+    res.status(500).json({ erro: 'Erro ao listar acessos' })
+  }
+})
+
+// SALVAR / EDITAR PERFIL
+app.post('/perfil', async (req, res) => {
+  try {
+    const { pessoa_id, foto, bio, cargo, instagram, whatsapp } = req.body
+    if (!pessoa_id) return res.status(400).json({ erro: 'pessoa_id é obrigatório' })
+
+    const result = await pool.query(`
+      INSERT INTO perfil_usuario (pessoa_id, foto, bio, cargo, instagram, whatsapp)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (pessoa_id) DO UPDATE SET
+        foto = EXCLUDED.foto,
+        bio = EXCLUDED.bio,
+        cargo = EXCLUDED.cargo,
+        instagram = EXCLUDED.instagram,
+        whatsapp = EXCLUDED.whatsapp
+      RETURNING *
+    `, [pessoa_id, foto || '/desenho.webp', bio || '', cargo || '', instagram || '', whatsapp || ''])
+    res.json(result.rows[0])
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ erro: 'Erro ao salvar perfil' })
+  }
+})
+
+// SALVAR LEAD DO MARKETING
+app.post('/leads', async (req, res) => {
+  try {
+    const { nome, whatsapp, precisa } = req.body
+    if (!nome || !nome.trim()) return res.status(400).json({ erro: 'Nome é obrigatório' })
+    const soNumeros = (whatsapp || '').replace(/\D/g, '')
+    if (soNumeros.length < 10) return res.status(400).json({ erro: 'WhatsApp com DDD é obrigatório' })
+
+    const result = await pool.query(
+      'INSERT INTO leads (nome, whatsapp, precisa) VALUES ($1, $2, $3) RETURNING *',
+      [nome.trim(), whatsapp, precisa || 'Quero mais clientes no Instagram']
+    )
+    res.json(result.rows[0])
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ erro: 'Erro ao salvar lead' })
+  }
+})
+
+// LISTAR LEADS - SÓ ADMIN VÊ
+app.get('/leads', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM leads ORDER BY id DESC')
+    res.json(result.rows)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ erro: 'Erro ao listar leads' })
+  }
+})
+
+// APAGAR LEAD - QUANDO JÁ ATENDEU
+app.delete('/leads/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM leads WHERE id = $1', [req.params.id])
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ erro: 'Erro ao apagar lead' })
   }
 })
 
