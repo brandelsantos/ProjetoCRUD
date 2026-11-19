@@ -1,13 +1,17 @@
+// ========== IMPORTS - controla as ferramentas que o backend usa ==========
+// dotenv = le o backend/.env | express = cria o servidor | cors = deixa o frontend falar com o backend | Pool = fala com o Postgres
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// ========== MIDDLEWARE - controla o que entra no backend ==========
+app.use(cors()); // deixa o frontend em localhost:5173 chamar o backend
+app.use(express.json()); // deixa o backend entender JSON que vem do frontend
 
-// Validação - bloqueia cadastro errado e limita telefone e idade
+// ========== VALIDAR PESSOA - controla as regras do cadastro no backend ==========
+// Se tiver errado aqui, o backend bloqueia e nem salva no banco
 function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
   if (!nome || !nome.trim()) {
     return 'Nome é obrigatório';
@@ -47,6 +51,8 @@ function validarPessoa(nome, email, telefone, idade, setor, usuario, senha) {
   return null;
 }
 
+// ========== POOL - controla a conexao com o banco ==========
+// Pega do backend/.env. Se nao tiver .env, usa esses valores padrao
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || '1234',
@@ -59,8 +65,10 @@ pool.on('error', (err) => {
   console.error('Erro no pool do banco:', err.message);
 });
 
+// ========== CRIAR TABELA - cria as tabelas se nao existirem, roda 1 vez quando o backend liga ==========
 async function criarTabela() {
   try {
+    // TABELA PESSOAS - controla o cadastro principal
     await pool.query(`CREATE TABLE IF NOT EXISTS pessoas (
       id SERIAL PRIMARY KEY,
       nome VARCHAR(100) NOT NULL,
@@ -72,6 +80,7 @@ async function criarTabela() {
       senha VARCHAR(100)
     )`);
 
+    // TABELA USUARIOS - controla os logins fixos: admin, compras, vendas, marketing
     await pool.query(`CREATE TABLE IF NOT EXISTS usuarios (
       id SERIAL PRIMARY KEY,
       usuario VARCHAR(50) UNIQUE,
@@ -80,6 +89,7 @@ async function criarTabela() {
       nome VARCHAR(100)
     )`);
 
+    // INSERT USUARIOS FIXOS - cria os 4 logins fixos se nao existirem
     await pool.query(`INSERT INTO usuarios (usuario, senha, tipo, nome) VALUES
       ('admin', '1234', 'admin', 'Admin'),
       ('compras', '1234', 'compras', 'Compras'),
@@ -87,6 +97,7 @@ async function criarTabela() {
       ('marketing', '1234', 'marketing', 'Marketing')
       ON CONFLICT (usuario) DO NOTHING`);
 
+    // TABELA LEADS - controla os leads do Quero crescer
     await pool.query(`
       CREATE TABLE IF NOT EXISTS leads (
       id SERIAL PRIMARY KEY,
@@ -96,18 +107,9 @@ async function criarTabela() {
       criado_em TIMESTAMP DEFAULT NOW()
     )
 `);
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS acessos_perfil (
-    id SERIAL PRIMARY KEY,
-    quem_viu_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
-    quem_viu_nome VARCHAR(100),
-    perfil_id INTEGER REFERENCES perfil_usuario(id) ON DELETE CASCADE,
-    perfil_nome VARCHAR(100),
-    criado_em TIMESTAMP DEFAULT NOW()
-  )
-`);
 
-    // TABELA PERFIL_USUARIO - PERFIL DE VERDADE, NÃO CÓPIA DE PRODUTO
+    // TABELA PERFIL_USUARIO - controla o perfil de verdade, NAO copia de produto
+    // TEM QUE VIR ANTES de acessos_perfil, porque acessos usa perfil_usuario
     await pool.query(`
       CREATE TABLE IF NOT EXISTS perfil_usuario (
         id SERIAL PRIMARY KEY,
@@ -119,8 +121,20 @@ await pool.query(`
         whatsapp VARCHAR(20) DEFAULT ''
       )
     `);
+
+    // TABELA ACESSOS_PERFIL - controla quem viu qual perfil
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS acessos_perfil (
+        id SERIAL PRIMARY KEY,
+        quem_viu_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
+        quem_viu_nome VARCHAR(100),
+        perfil_id INTEGER REFERENCES perfil_usuario(id) ON DELETE CASCADE,
+        perfil_nome VARCHAR(100),
+        criado_em TIMESTAMP DEFAULT NOW()
+      )
+    `);
       
-// TABELA DE PRODUTOS - AINDA EM TESTE TURURUU
+    // TABELA PRODUTOS - AINDA EM TESTE, backend pronto, tela ainda nao feita
     await pool.query(`CREATE TABLE IF NOT EXISTS produtos (
       id SERIAL PRIMARY KEY,
       nome VARCHAR(100) NOT NULL,
@@ -129,6 +143,7 @@ await pool.query(`
       setor VARCHAR(20) DEFAULT 'admin'
     )`);
     
+    // ALTER TABLE - controla as colunas novas pra quem ja tinha a tabela antiga
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS idade INT`);
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS setor VARCHAR(20) DEFAULT 'admin'`);
@@ -138,7 +153,6 @@ await pool.query(`
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_email_unico ON pessoas (email)`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_pessoas_usuario_unico ON pessoas (usuario)`);
 
-    
     console.log('Tabela pessoas pronta');
   } catch (err) {
     console.error('Erro ao criar tabela, tentando de novo em 3s:', err.message);
@@ -146,9 +160,10 @@ await pool.query(`
   }
 }
 
+// CHAMA CRIAR TABELA - roda quando o backend liga
 criarTabela();
 
-// GET - BUSCAR TODOS
+// ========== GET /pessoas - BUSCAR TODOS - lista todas as pessoas pro frontend ==========
 app.get('/pessoas', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM pessoas ORDER BY id');
@@ -159,7 +174,8 @@ app.get('/pessoas', async (req, res) => {
   }
 });
 
-// LOGIN - ÚNICO, SEM DUPLICATA - AQUI VAI O res.json COM id
+// ========== POST /login - LOGIN UNICO, SEM DUPLICATA ==========
+// 1 - olha nos fixos (usuarios) | 2 - olha nos cadastrados (pessoas) | fixo nao tem id, cadastrado tem id
 app.post('/login', async (req, res) => {
   try {
     const { usuario, senha } = req.body
@@ -183,7 +199,7 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ erro: 'Usuário ou senha errados!' })
     }
 
-    // AQUI É O res.json QUE VOCÊ PERGUNTOU - COM id
+    // AQUI É O res.json COM id - o frontend usa esse id pra cair no Meu Perfil
     return res.json({ tipo: result.rows[0].tipo, nome: result.rows[0].nome, id: result.rows[0].id })
   } catch (err) {
     console.error('Erro no login:', err.message)
@@ -191,7 +207,7 @@ app.post('/login', async (req, res) => {
   }
 })
 
-// BUSCAR PERFIL DE UMA PESSOA
+// ========== GET /perfil/:pessoa_id - BUSCAR PERFIL DE UMA PESSOA - so mostra, nao edita ==========
 app.get('/perfil/:pessoa_id', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM perfil_usuario WHERE pessoa_id = $1', [req.params.pessoa_id])
@@ -200,7 +216,9 @@ app.get('/perfil/:pessoa_id', async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar perfil' })
   }
 })
-// REGISTRAR QUE ALGUÉM VIU UM PERFIL
+
+// ========== POST /perfil - SALVAR / EDITAR PERFIL - UNICO, TRAVADO SO ADMIN ==========
+// ATENCAO: antes tinha 2x esse bloco, o segundo apagava a trava. Agora tem so 1.
 app.post('/perfil', async (req, res) => {
   try {
     // TRAVA: só admin pode salvar perfil
@@ -209,39 +227,8 @@ app.post('/perfil', async (req, res) => {
     }
     const { pessoa_id, foto, bio, cargo, instagram, whatsapp } = req.body
     if (!pessoa_id) return res.status(400).json({ erro: 'Falta pessoa_id' })
-    const existe = await pool.query('SELECT id FROM perfil_usuario WHERE pessoa_id = $1', [pessoa_id])
-    let result
-    if (existe.rows.length > 0) {
-      result = await pool.query(
-        'UPDATE perfil_usuario SET foto=$1, bio=$2, cargo=$3, instagram=$4, whatsapp=$5 WHERE pessoa_id=$6 RETURNING *',
-        [foto || '', bio || '', cargo || '', instagram || '', whatsapp || '', pessoa_id]
-      )
-    } else {
-      result = await pool.query(
-        'INSERT INTO perfil_usuario (pessoa_id, foto, bio, cargo, instagram, whatsapp) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-        [pessoa_id, foto || '', bio || '', cargo || '', instagram || '', whatsapp || '']
-      )
-    }
-    res.json(result.rows[0])
-  } catch (e) { console.log(e); res.status(500).json({ erro: 'Erro ao salvar perfil' }) }
-})
 
-// LISTAR ACESSOS - SÓ ADMIN VÊ
-app.get('/acessos-perfil', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM acessos_perfil ORDER BY id DESC LIMIT 50')
-    res.json(result.rows)
-  } catch (e) {
-    res.status(500).json({ erro: 'Erro ao listar acessos' })
-  }
-})
-
-// SALVAR / EDITAR PERFIL
-app.post('/perfil', async (req, res) => {
-  try {
-    const { pessoa_id, foto, bio, cargo, instagram, whatsapp } = req.body
-    if (!pessoa_id) return res.status(400).json({ erro: 'pessoa_id é obrigatório' })
-
+    // Se ja tem perfil, atualiza. Se nao tem, cria.
     const result = await pool.query(`
       INSERT INTO perfil_usuario (pessoa_id, foto, bio, cargo, instagram, whatsapp)
       VALUES ($1, $2, $3, $4, $5, $6)
@@ -260,7 +247,17 @@ app.post('/perfil', async (req, res) => {
   }
 })
 
-// SALVAR LEAD DO MARKETING
+// ========== GET /acessos-perfil - LISTAR ACESSOS - SO ADMIN VE quem viu qual perfil ==========
+app.get('/acessos-perfil', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM acessos_perfil ORDER BY id DESC LIMIT 50')
+    res.json(result.rows)
+  } catch (e) {
+    res.status(500).json({ erro: 'Erro ao listar acessos' })
+  }
+})
+
+// ========== POST /leads - SALVAR LEAD DO MARKETING - vem do Quero crescer ==========
 app.post('/leads', async (req, res) => {
   try {
     const { nome, whatsapp, precisa } = req.body
@@ -270,7 +267,7 @@ app.post('/leads', async (req, res) => {
 
     const result = await pool.query(
       'INSERT INTO leads (nome, whatsapp, precisa) VALUES ($1, $2, $3) RETURNING *',
-      [nome.trim(), whatsapp, precisa || 'Quero mais clientes no Instagram']
+      [nome.trim(), whatsapp, precisa || 'Quero mais clientes no insta']
     )
     res.json(result.rows[0])
   } catch (e) {
@@ -279,7 +276,7 @@ app.post('/leads', async (req, res) => {
   }
 })
 
-// LISTAR LEADS - SÓ ADMIN VÊ
+// ========== GET /leads - LISTAR LEADS - SO ADMIN VE ==========
 app.get('/leads', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM leads ORDER BY id DESC')
@@ -290,7 +287,7 @@ app.get('/leads', async (req, res) => {
   }
 })
 
-// APAGAR LEAD - QUANDO JÁ ATENDEU
+// ========== DELETE /leads/:id - APAGAR LEAD - botao Ja atendi ==========
 app.delete('/leads/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM leads WHERE id = $1', [req.params.id])
@@ -300,7 +297,7 @@ app.delete('/leads/:id', async (req, res) => {
   }
 })
 
-// GET - Buscar 1 por id
+// ========== GET /pessoas/:id - Buscar 1 pessoa por id ==========
 app.get('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -315,7 +312,7 @@ app.get('/pessoas/:id', async (req, res) => {
   }
 });
 
-// POST - Cadastrar
+// ========== POST /pessoas - Cadastrar pessoa nova ==========
 app.post('/pessoas', async (req, res) => {
   try {
     const { nome, email, telefone, idade, setor, usuario, senha } = req.body;
@@ -340,7 +337,7 @@ app.post('/pessoas', async (req, res) => {
   }
 });
 
-// PUT - Editar
+// ========== PUT /pessoas/:id - Editar pessoa ==========
 app.put('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -373,7 +370,7 @@ app.put('/pessoas/:id', async (req, res) => {
   }
 });
 
-// DELETE - Deletar
+// ========== DELETE /pessoas/:id - Deletar pessoa ==========
 app.delete('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -393,7 +390,7 @@ app.delete('/pessoas/:id', async (req, res) => {
   }
 });
 
-// PRODUTOS - Buscar todos
+// ========== PRODUTOS - Buscar todos ==========
 app.get('/produtos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM produtos ORDER BY id');
@@ -404,7 +401,7 @@ app.get('/produtos', async (req, res) => {
   }
 });
 
-// PRODUTOS - Cadastrar
+// ========== PRODUTOS - Cadastrar ==========
 app.post('/produtos', async (req, res) => {
   try {
     const { nome, preco, quantidade, setor } = req.body;
@@ -422,7 +419,7 @@ app.post('/produtos', async (req, res) => {
   }
 });
 
-// PRODUTOS - Deletar
+// ========== PRODUTOS - Deletar ==========
 app.delete('/produtos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -437,5 +434,6 @@ app.delete('/produtos/:id', async (req, res) => {
   }
 });
 
+// ========== LIGAR SERVIDOR - controla a porta do backend, padrao 3001 ==========
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Backend rodando em http://localhost:${PORT}`));
