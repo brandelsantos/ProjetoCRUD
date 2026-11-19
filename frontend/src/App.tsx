@@ -72,8 +72,13 @@ export default function App() {
   const [tipoUsuario, setTipoUsuario] = useState('')
   const [nomeLogado, setNomeLogado] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('todos')
-  const [tituloPropaganda, setTituloPropaganda]= useState('')
-  const [textoPropaganda,setTextoPropaganda] = useState('')
+  const [mostrarSobre, setMostrarSobre] = useState(false)
+  const [nomeLead, setNomeLead] = useState('')
+  const [whatsLead, setWhatsLead] = useState('')
+  const [precisaLead, setPrecisaLead] = useState('Quero mais clientes no Instagram')
+  const [enviadoLead, setEnviadoLead] = useState(false)
+  const [tituloPropaganda, setTituloPropaganda] = useState('')
+  const [textoPropaganda, setTextoPropaganda] = useState('')
   const [propaganda, setPropaganda] = useState({ titulo: 'Melhor câmera do mundo!', texto: 'Tecpix a mais vendida do mercado!' })
 
   async function carregar() {
@@ -232,7 +237,7 @@ export default function App() {
 
   function ListaSetor({ lista, titulo }: { lista: Pessoa[], titulo: string }) {
     return (
-      <div style={{ textAlign: 'center', marginTop: 20 }}>
+      <div style={{ textAlign: 'center', marginTop: 8 }}>
         <h2>{titulo}</h2>
         <p style={{ color: '#e5e7eb' }}>Olá, {nomeLogado}! Total nesse setor: {lista.length}</p>
         {lista.length === 0 ? <p style={{ color: '#9ca3af' }}>Nenhuma pessoa cadastrada para esse setor ainda.</p> : (
@@ -261,16 +266,18 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: 'Arial', background: '#1f2028', maxWidth: 700, margin: '40px auto', borderRadius: 16, boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)' }}>
-      <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
-        <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
-        <h1 style={{ lineHeight: 1.2, marginTop: 16, marginBottom: 8, fontSize: 32, whiteSpace: 'normal' }}>Cadastro de Pessoas - CRUD</h1>
-        <p style={{ color: '#e5e7eb', fontSize: 16, fontWeight: 600, marginTop: 4 }}>Total: {pessoas.length} pessoas</p>
-        {logadoNova && <p style={{ color: '#22c55e', fontWeight: 700 }}>Logado como: {nomeLogado} ({tipoUsuario})</p>}
-      </div>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: 20, height: 'auto', overflow: 'visible' }}>
+      {aba !== 'marketing' && (
+        <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
+          <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
+          <h1 style={{ lineHeight: 1.2, marginTop: 16, marginBottom: 8, fontSize: 32, whiteSpace: 'normal' }}>Cadastro de Pessoas - CRUD</h1>
+          <p style={{ color: '#e5e7eb', fontSize: 16, fontWeight: 600, marginTop: 4 }}>Total: {pessoas.length} pessoas</p>
+          {logadoNova && <p style={{ color: '#22c55e', fontWeight: 700 }}>Logado como: {nomeLogado} ({tipoUsuario})</p>}
+        </div>
+      )}
 
       {logadoNova && (
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+        <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: aba === 'marketing' ? 16 : 0 }}>
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (
             <button onClick={() => setAba('compras')} style={{ marginRight: 8, background: aba === 'compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Compras</button>
           )}
@@ -408,35 +415,106 @@ export default function App() {
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
       {aba === 'vendas' && <ListaSetor lista={pessoasVendas} titulo="Setor de vendas" />}
 
-
-                    {/* ABA DE MARKETING PARA MOSTRAR OQ ELE VÊ*/}
+      {/* ABA DE MARKETING PARA MOSTRAR OQ ELE VÊ*/}
       {aba === 'marketing' && (
         <div>
-        {/* INÍCIO DO BANNER CLICÁVEL - SÓ MARKETING VÊ */}
-<div
-  onClick={() => window.open('https://www.youtube.com/', '_blank')}
-  style={{ position: 'relative', width: '100%', margin: 0, overflow: 'hidden', borderRadius: 0, display: 'block', cursor: 'pointer' }}
->
-  <img src="/sua-foto.jpg" alt="Marketing Ideal Para Você" style={{ width: '100%', display: 'block', minHeight: 320, objectFit: 'cover' }} />
+          {/* INÍCIO DO BANNER CLICÁVEL - SÓ MARKETING VÊ */}
+          <div
+            onClick={() => window.open('https://www.youtube.com/', '_blank')}
+            style={{ position: 'relative', width: '100%', height: '100vh', margin: 0, overflow: 'hidden', borderRadius: 0, display: 'block', cursor: 'pointer', backgroundImage: 'url(/marketing.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
+          >
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: '#5a5a5a', color: '#fff', padding: '16px 20px', fontSize: 28, fontWeight: 800, boxSizing: 'border-box' }}>
+              MARKETING IDEAL PARA VOCÊ!
+            </div>
 
-  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: '#5a5a5a', color: '#fff', padding: '16px 20px', fontSize: 28, fontWeight: 800, boxSizing: 'border-box' }}>
-    MARKETING IDEAL PARA VOCÊ!
-  </div>
+            <div style={{ position: 'absolute', left: 20, bottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={(e) => { e.stopPropagation(); setMostrarSobre(!mostrarSobre) }} style={{ background: '#6b6b6b', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content', cursor: 'pointer' }}>
+                ⓘ Sobre nós
+              </button>
+              <a href="https://wa.me/55929984883080" target="_blank" onClick={(e) => e.stopPropagation()} style={{ background: '#6b6b6b', color: '#fff', textDecoration: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content' }}>
+                ✆ Entre em contato
+              </a>
+            </div>
+          </div>
+          {/* FIM DO BANNER */}
 
-  <div style={{ position: 'absolute', left: 20, bottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-    <a href="#sobre" onClick={(e) => e.stopPropagation()} style={{ background: '#6b6b6b', color: '#fff', textDecoration: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content' }}>
-      ⓘ Sobre nós
-    </a>
-    <a href="https://wa.me/5592992984883080" target="_blank" onClick={(e) => e.stopPropagation()} style={{ background: '#6b6b6b', color: '#fff', textDecoration: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content' }}>
-      ✆ Entre em contato
-    </a>
-  </div>
-</div>
-{/* FIM DO BANNER */}
+          {mostrarSobre && (
+            <div id="sobre" style={{ background: '#2e303a', margin: '12px 24px', padding: 20, borderRadius: 12, textAlign: 'left', color: '#e5e7eb', maxHeight: '60vh', overflowY: 'auto' }}>
+              <h2 style={{ marginTop: 0, textAlign: 'center' }}>Sobre nós</h2>
+              <p>Somos o <b>Marketing Ideal Para Você!</b> — a equipe que transforma empresas pequenas em marcas que ninguém consegue ignorar.</p>
+              <p>✅ Criamos campanhas, posts e anúncios que chamam atenção<br />
+              ✅ Ajudamos você a atrair leads qualificados <br />
+              ✅ Cuidamos da sua imagem, do seu logo e da sua divulgação</p>
+              <p>Juntos, tornaremos o ideal em números: mais leads, mais clientes, mais vendas — e uma empresa que não para de crescer.</p>
+              <p style={{ textAlign: 'center', marginBottom: 0 }}>
+                <a href="https://wa.me/5592984883080" target="_blank" style={{ background: '#22c55e', color: '#fff', textDecoration: 'none', padding: '10px 18px', borderRadius: 8, fontWeight: 700 }}>Falar no WhatsApp</a>
+                <button onClick={() => setMostrarSobre(false)} style={{ marginLeft: 8, background: '#6b7280', color: '#fff', border: 'none', padding: '10px 14px', borderRadius: 8, cursor: 'pointer' }}>Fechar</button>
+              </p>
+            </div>
+          )}
 
-        <ListaSetor lista={pessoasMarketing} titulo="Setor de Marketing" />
-      </div>
-    )}
+          {/* SERVIÇOS */}
+          <div style={{ padding: '24px', textAlign: 'center' }}>
+            <h2 style={{ marginBottom: 4 }}>O que fazemos por você</h2>
+            <p style={{ color: '#9ca3af', marginTop: 0 }}>Escolha o que sua empresa precisa e fale com a gente</p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginTop: 16 }}>
+              <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 200, maxWidth: 300 }}>
+                <div style={{ fontSize: 32 }}>📱</div>
+                <h3 style={{ margin: '8px 0' }}>Posts e Reels</h3>
+                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Posts que chamam atenção e fazem seu Instagram vender todos os dias.</p>
+                <a href="https://wa.me/5592984883080?text=Quero%20posts%20e%20reels%20pro%20meu%20Instagram" target="_blank" style={{ background: '#ec4899', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, display: 'inline-block' }}>Quero esse</a>
+              </div>
+              <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 200, maxWidth: 300 }}>
+                <div style={{ fontSize: 32 }}>🎯</div>
+                <h3 style={{ margin: '8px 0' }}>Anúncios que vendem</h3>
+                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Anúncios no Instagram e Facebook pra atrair leads qualificados prontos pra comprar.</p>
+                <a href="https://wa.me/5592984883080?text=Quero%20an%C3%BAncios%20que%20vendem" target="_blank" style={{ background: '#ec4899', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, display: 'inline-block' }}>Quero esse</a>
+              </div>
+              <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 200, maxWidth: 300 }}>
+                <div style={{ fontSize: 32 }}>✨</div>
+                <h3 style={{ margin: '8px 0' }}>Logo e Imagem</h3>
+                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Sua marca com cara de empresa grande: logo, cores e identidade visual completa.</p>
+                <a href="https://wa.me/5592984883080?text=Quero%20logo%20e%20identidade%20visual" target="_blank" style={{ background: '#ec4899', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, display: 'inline-block' }}>Quero esse</a>
+              </div>
+            </div>
+          </div>
+
+          {/* FORMULÁRIO DE LEAD - QUERO CRESCER */}
+          <div style={{ background: '#2e303a', margin: '0 24px 24px 24px', padding: 24, borderRadius: 12, textAlign: 'center' }}>
+            <h2 style={{ marginTop: 0 }}>Quero crescer 🚀</h2>
+            <p style={{ color: '#e5e7eb' }}>Preenche aqui que a gente te chama no WhatsApp com um plano pra sua empresa.</p>
+            {enviadoLead ? (
+              <div style={{ background: '#22c55e', color: '#fff', padding: 16, borderRadius: 10, fontWeight: 700 }}>
+                ✅ Recebido, {nomeLead}! Já já te chamamos no WhatsApp {whatsLead}!
+                <br />
+                <button onClick={() => { setEnviadoLead(false); setNomeLead(''); setWhatsLead('') }} style={{ marginTop: 10, background: '#fff', color: '#22c55e', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Enviar outro</button>
+              </div>
+            ) : (
+              <div>
+                <input placeholder="Seu nome" value={nomeLead} onChange={(e) => setNomeLead(e.target.value)} style={{ width: '100%', maxWidth: 400, marginBottom: 10 }} />
+                <br />
+                <input placeholder="Seu WhatsApp - ex: (92) 99999-9999" value={whatsLead} onChange={(e) => setWhatsLead(formatarTelefone(e.target.value))} style={{ width: '100%', maxWidth: 400, marginBottom: 10 }} />
+                <br />
+                <select value={precisaLead} onChange={(e) => setPrecisaLead(e.target.value)} style={{ width: '100%', maxWidth: 400, padding: '10px 12px', borderRadius: 8, border: '1px solid #4b5563', background: '#1f2028', color: '#fff', fontWeight: 600, marginBottom: 12 }}>
+                  <option>Quero mais clientes no Instagram</option>
+                  <option>Quero anúncios que vendem</option>
+                  <option>Quero logo e identidade visual</option>
+                  <option>Quero tudo - gestão completa</option>
+                </select>
+                <br />
+                <button onClick={() => {
+                  if (!nomeLead.trim()) { alert('Coloca seu nome!'); return }
+                  if (whatsLead.replace(/\D/g, '').length < 10) { alert('Coloca seu WhatsApp com DDD!'); return }
+                  setEnviadoLead(true)
+                }} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>Quero crescer →</button>
+                <p style={{ color: '#9ca3af', fontSize: 12, marginBottom: 0 }}>Alavanque o seu negócio com o direcionamento certo!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Lista de setor tirada pra aproveitar a imagem da pagina */}
         </div>
-      )
+      )}
+    </div>
+  )
 }
