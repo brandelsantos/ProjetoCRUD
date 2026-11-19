@@ -415,8 +415,7 @@ export default function App() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 20, height: 'auto', overflow: 'visible' }}>
       {/* ========== CABECALHO - titulo Cadastro de Pessoas, NAO aparece em Anuncio, Perfil e Perfil Compras ========== */}
-      {aba !== 'anuncio' && aba !== 'perfil' && aba !== 'perfil-compras' && (
-        <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
+      {aba !== 'anuncio' && aba !== 'perfil' && aba !== 'perfil-compras' && aba !== 'perfil-marketing' && (        <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
           <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
           <h1 style={{ lineHeight: 1.2, marginTop: 16, marginBottom: 8, fontSize: 32, whiteSpace: 'normal' }}>Cadastro de Pessoas - CRUD</h1>
           <p style={{ color: '#e5e7eb', fontSize: 16, fontWeight: 600, marginTop: 4 }}>Total: {pessoas.length} pessoas</p>
@@ -427,19 +426,24 @@ export default function App() {
       {/* ========== BOTOES DE NAVEGACAO - controlam pra qual aba vai ========== */}
       {logadoNova && (
         <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: (aba === 'anuncio' || aba === 'perfil' || aba === 'perfil-compras') ? 16 : 0 }}>
-          {/* BOTAO MEU PERFIL - so aparece se logou com pessoa cadastrada */}
-          {idPessoaLogada && (
-            <button onClick={() => setAba('perfil')} style={{ marginRight: 8, background: aba === 'perfil' ? '#0f766e' : '#14b8a6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>👤 Meu Perfil</button>
+          {/* ========== BOTOES DE NAVEGACAO - controlam pra qual aba vai ========== */}
+          {/* BOTAO MEU PERFIL - so aparece se NAO for marketing nem compras, pra nao duplicar */}
+          {idPessoaLogada && tipoUsuario !== 'marketing' && tipoUsuario !== 'compras' && (
+            <button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil') }} style={{ marginRight: 8, background: aba === 'perfil' ? '#0f766e' : '#14b8a6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>👤 Meu Perfil</button>
           )}
-          {/* BOTAO PERFIL COMPRAS - aba 1 de Compras, so perfil */}
+          {/* BOTAO PERFIL COMPRAS - aba 1 de Compras, so perfil - carrega o perfil antes de abrir */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (
-            <button onClick={() => setAba('perfil-compras')} style={{ marginRight: 8, background: aba === 'perfil-compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Compras</button>
+            <button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-compras') }} style={{ marginRight: 8, background: aba === 'perfil-compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Compras</button>
           )}
           {/* BOTAO COMPRAS - aba 2 de Compras, so a lista */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (
             <button onClick={() => setAba('compras')} style={{ marginRight: 8, background: aba === 'compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Compras</button>
           )}
-          {/* BOTAO ANUNCIO - era a aba Marketing, so o banner */}
+          {/* BOTAO PERFIL MARKETING - aba 1 de Marketing, so perfil - carrega o perfil antes de abrir */}
+          {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (
+            <button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-marketing') }} style={{ marginRight: 8, background: aba === 'perfil-marketing' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Marketing</button>
+          )}
+          {/* BOTAO ANUNCIO - aba 2 de Marketing, so o banner */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (
             <button onClick={() => setAba('anuncio')} style={{ marginRight: 8, background: aba === 'anuncio' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio</button>
           )}
@@ -466,32 +470,37 @@ export default function App() {
           <input placeholder="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
           <br /><br />
           <button onClick={async () => {
-            const res = await fetch(`${API.replace('/pessoas', '')}/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ usuario, senha })
-            })
-            const data = await res.json()
-            if (!res.ok) {
-              alert('Usuário ou senha errados!')
-              return
-            }
-            setTipoUsuario(data.tipo)
-            setNomeLogado(data.nome || usuario)
-            setLogadoNova(true)
-            // DECIDE ABA POS LOGIN: pessoa cadastrada -> Meu Perfil / fixo marketing -> Anuncio / fixo compras -> Perfil Compras
-            if (data.id) {
-              setIdPessoaLogada(data.id)
-              carregarPerfil(data.id)
-              setAba('perfil')
-            } else {
-              setIdPessoaLogada(null)
-              setPerfil(null)
-              if (data.tipo === 'marketing') setAba('anuncio')
-              else if (data.tipo === 'compras') setAba('perfil-compras')
-              else setAba(data.tipo)
-            }
-          }}>Entrar</button>
+          const res = await fetch(`${API.replace('/pessoas', '')}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, senha })
+          })
+          const data = await res.json()
+          if (!res.ok) {
+            alert('Usuário ou senha errados!')
+            return
+          }
+          setTipoUsuario(data.tipo)
+          setNomeLogado(data.nome || usuario)
+          setLogadoNova(true)
+          // DECIDE ABA POS LOGIN: pessoa cadastrada -> vai pro perfil do setor dela / fixo marketing -> Perfil Marketing / fixo compras -> Perfil Compras
+          if (data.id) {
+            setIdPessoaLogada(data.id)
+            carregarPerfil(data.id)
+            // PESSOA CADASTRADA: olha o setor dela pra decidir a aba
+            if (data.tipo === 'marketing') setAba('perfil-marketing')
+            else if (data.tipo === 'compras') setAba('perfil-compras')
+            else setAba('perfil')
+          } else {
+            setIdPessoaLogada(null)
+            setPerfil(null)
+            // USUARIO FIXO: nao tem id de pessoa, cai no perfil do setor dele
+            if (data.tipo === 'marketing') setAba('perfil-marketing')
+            else if (data.tipo === 'compras') setAba('perfil-compras')
+            else setAba(data.tipo)
+          
+      }
+      }}>Entrar</button>
         </div>
       )}
 
@@ -745,6 +754,41 @@ export default function App() {
 
       {/* ========== ABA VENDAS - so a lista de Vendas ========== */}
       {aba === 'vendas' && <ListaSetor lista={pessoasVendas} titulo="Setor de vendas" />}
+
+      {/* ========== ABA PERFIL MARKETING - aba 1 de Marketing, so perfil, pessoa NAO edita ========== */}
+      {aba === 'perfil-marketing' && (
+        <div>
+          <h2 style={{ textAlign: 'center' }}>Perfil Marketing</h2>
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin, la no cadastro.</p>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+            {/* CARTAO PERFIL MARKETING */}
+            <div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}>
+              <img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto do perfil" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #ec4899' }} />
+              <h3 style={{ margin: '12px 0 2px 0', fontSize: 20 }}>{nomeLogado}</h3>
+              <p style={{ color: '#f9a8d4', margin: 0, fontWeight: 700 }}>{cargoPerfil || 'Marketing'}</p>
+              {bioPerfil && <p style={{ color: '#e5e7eb', fontSize: 14, marginTop: 10 }}>{bioPerfil}</p>}
+              {instaPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '6px 0 0 0' }}>{instaPerfil}</p>}
+              {whatsPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0 0' }}>{whatsPerfil}</p>}
+              <p style={{ color: '#6b7280', fontSize: 11, marginTop: 14, borderTop: '1px solid #333', paddingTop: 10 }}>Perfil editado so pelo admin.</p>
+            </div>
+
+            {/* INFORMACOES MARKETING + BLOCO FUTURO */}
+            <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}>
+              <h3 style={{ marginTop: 0 }}>Minhas informacoes - Marketing</h3>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Email:</b> {pessoaLogada?.email || '-'}</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Setor:</b> Marketing</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p>
+              <div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}>
+                <h4 style={{ margin: '0 0 6px 0' }}>Em breve aqui</h4>
+                <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Aqui a gente vai colocar as outras informacoes de Marketing no futuro: campanhas, leads, posts, etc.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ========== ABA ANUNCIO - era Marketing, so banner + Sobre + Servicos + Quero crescer ========== */}
       {aba === 'anuncio' && (
