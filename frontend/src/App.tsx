@@ -68,6 +68,10 @@ export default function App() {
   const [filtroSetor, setFiltroSetor] = useState('todos')
   const [produtos, setProdutos] = useState<any[]>([]);
 
+  // ========== ESTADO META VENDAS - controla a meta do mês ==========
+  const [metaVendas, setMetaVendas] = useState(10000)
+  const [vendidoVendas, setVendidoVendas] = useState(6500)
+
   const [mostrarSobre, setMostrarSobre] = useState(false)
   const [nomeLead, setNomeLead] = useState('')
   const [whatsLead, setWhatsLead] = useState('')
@@ -209,7 +213,7 @@ export default function App() {
           ============================================================ */}
       {logadoNova && (
         <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: (aba === 'anuncio' || aba === 'perfil' || aba === 'perfil-compras' || aba === 'perfil-vendas' || aba === 'perfil-marketing') ? 16 : 0 }}>
-          {/* MEU PERFIL - so admin, NUNCA para setor (pra nao duplicar) */}
+          {/* MEU PERFIL - so admin*/}
           {idPessoaLogada && tipoUsuario !== 'marketing' && tipoUsuario !== 'compras' && tipoUsuario !== 'vendas' && (
             <button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil') }} style={{ marginRight: 8, background: aba === 'perfil' ? '#0f766e' : '#14b8a6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>👤 Meu Perfil</button>
           )}
@@ -221,7 +225,7 @@ export default function App() {
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (<button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-vendas') }} style={{ marginRight: 8, background: aba === 'perfil-vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Vendas</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (<button onClick={() => setAba('vendas')} style={{ marginRight: 8, background: aba === 'vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Vendas</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (<button onClick={() => setAba('anuncio-vendas')} style={{ marginRight: 8, background: aba === 'anuncio-vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio Vendas</button>)}
-          {/* MARKETING - 2 abas (Anuncio ja era a aba 2) */}
+          {/* MARKETING - 2 abas  */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (<button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-marketing') }} style={{ marginRight: 8, background: aba === 'perfil-marketing' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Marketing</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (<button onClick={() => setAba('anuncio-marketing')} style={{ marginRight: 8, background: aba === 'anuncio-marketing' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio Marketing</button>)}
           {/* ADMIN + SAIR */}
@@ -231,7 +235,7 @@ export default function App() {
       )}
 
       {/* ============================================================
-          ETAPA 5 - TELA LOGIN - decide pra qual aba vai
+                    TELA LOGIN - decide pra qual aba vai
           ============================================================ */}
       {aba === 'login' && (
         <div style={{ textAlign: 'center', marginTop: 20 }}>
@@ -251,14 +255,13 @@ export default function App() {
       )}
 
       {/* ============================================================
-          ETAPA 6 - PAGINAS - UMA EMBAIXO DA OUTRA, NUNCA UMA DENTRO DA OUTRA!
-          Essa foi a correcao do erro: Perfil Vendas estava DENTRO do Admin!
+          PAGINAS - UMA EMBAIXO DA OUTRA!
           ============================================================ */}
 
-      {/* 6.1 MEU PERFIL - so admin */}
+      {/*  MEU PERFIL - so admin */}
       {aba === 'perfil' && (<div><h2 style={{ textAlign: 'center' }}>👤 Meu Perfil</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #14b8a6' }} /><h3>{nomeLogado}</h3><p style={{ color: '#5eead4', fontWeight: 700 }}>{cargoPerfil || tipoUsuario}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>📸 {instaPerfil}</p>}{whatsPerfil && <p>📱 {whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informações</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> {pessoaLogada?.setor || tipoUsuario}</p><p><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p></div></div></div>)}
 
-      {/* 6.2 ADMIN - Dashboard + Leads + Acessos + Cadastro + Editar Perfil + Lista */}
+      {/* ADMIN - Dashboard + Leads + Acessos + Cadastro + Editar Perfil + Lista */}
       {aba === 'admin' && (
         <div>
           <h2 style={{ textAlign: 'center' }}>📊 Dashboard</h2>
@@ -303,38 +306,133 @@ export default function App() {
           <div style={{ textAlign: 'center' }}><button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>Anterior</button><span> Pagina {pagina} de {totalPaginas} </span><button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas}>Proxima</button></div>
         </div>
       )}
-      {/* FIM DO ADMIN - Perfil Vendas fica FORA daqui! */}
+      {/* FIM DO ADMIN */}
 
-      {/* 6.3 PERFIL VENDAS - FORA DO ADMIN (correcao do erro admin x perfil-vendas) */}
+      {/* PERFIL VENDAS - FORA DO ADMIN (correcao do erro admin x perfil-vendas) */}
       {aba === 'perfil-vendas' && (
         <div><h2 style={{ textAlign: 'center' }}>Perfil Vendas</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #22c55e' }} /><h3>{nomeLogado}</h3><p style={{ color: '#86efac', fontWeight: 700 }}>{cargoPerfil || 'Vendas'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>📸 {instaPerfil}</p>}{whatsPerfil && <p>📱 {whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informações - Vendas</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Vendas</p><p><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p><div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}><h4>📌 Em breve aqui</h4><p style={{ color: '#9ca3af', fontSize: 13 }}>Metas, comissões, etc.</p></div></div></div></div>
       )}
 
-      {/* 6.4 PERFIL COMPRAS */}
+      {/* PERFIL COMPRAS */}
       {aba === 'perfil-compras' && (
         <div><h2 style={{ textAlign: 'center' }}>Perfil Compras</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #8b5cf6' }} /><h3>{nomeLogado}</h3><p style={{ color: '#c4b5fd', fontWeight: 700 }}>{cargoPerfil || 'Compras'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>{instaPerfil}</p>}{whatsPerfil && <p>{whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informacoes - Compras</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Compras</p><p><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p><div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}><h4>Em breve aqui</h4><p style={{ color: '#9ca3af', fontSize: 13 }}>Pedidos, fornecedores, etc.</p></div></div></div></div>
       )}
 
-      {/* 6.5 COMPRAS - so a lista */}
+      {/* COMPRAS - so a lista */}
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
 
-      {/* 6.6 VENDAS - so a tabela de produtos, SEM lista de pessoas */}
+            {/* ========== 6.6 DASHBOARD VENDAS + TABELA DE PRODUTOS ========== */}
       {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && aba === 'vendas' && (
-        <><h3>Controle de Produtos - Time de Vendas</h3>{produtos.length === 0 ? <p style={{ color: '#9ca3af' }}>Nenhum produto ainda.</p> : <table style={{ width: '100%', borderCollapse: 'collapse', background: '#030303' }}><thead><tr style={{ background: '#1bbe18', color: '#030303', textAlign: 'left' }}><th style={{ padding: 8, border: '1px solid #030303' }}>ID</th><th style={{ padding: 8, border: '1px solid #030303' }}>Nome</th><th style={{ padding: 8, border: '1px solid #030303' }}>Preço</th><th style={{ padding: 8, border: '1px solid #030303' }}>Qtd</th><th style={{ padding: 8, border: '1px solid #030303' }}>Descrição</th><th style={{ padding: 8, border: '1px solid #030303' }}>Total</th></tr></thead><tbody>{(produtos || []).map((p) => (<tr key={p.id}><td style={{ padding: 8, border: '1px solid #030303' }}>{p.id}</td><td style={{ padding: 8, border: '1px solid #030303' }}><b>{p.nome}</b></td><td style={{ padding: 8, border: '1px solid #030303' }}>R$ {p.preco}</td><td style={{ padding: 8, border: '1px solid #030303' }}>{p.quantidade}</td><td style={{ padding: 8, border: '1px solid #030303' }}>{p.descricao}</td><td style={{ padding: 8, border: '1px solid #030303' }}>R$ {(Number(p.preco) * Number(p.quantidade)).toFixed(2)}</td></tr>))}</tbody></table>}</>
+        <div>
+          {/* TITULO */}
+          <h2 style={{ textAlign: 'center' }}>💰 Dashboard Vendas</h2>
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você vê quanto tem pra vender, se bateu a meta e o que está acabando!</p>
+
+          {/* ===== CARDS DE CIMA ===== */}
+          {/* Calcula tudo aqui em cima pra usar nos cards */}
+          {(() => {
+            const totalEstoque = produtos.reduce((soma, p) => soma + (Number(p.preco) * Number(p.quantidade)), 0)
+            const totalQtd = produtos.reduce((soma, p) => soma + Number(p.quantidade), 0)
+            const maisCaro = produtos.length > 0 ? produtos.reduce((a, b) => Number(a.preco) > Number(b.preco) ? a : b) : null
+            const maisBarato = produtos.length > 0 ? produtos.reduce((a, b) => Number(a.preco) < Number(b.preco) ? a : b) : null
+            const quaseAcabando = produtos.filter(p => Number(p.quantidade) < 5)
+            const faltaMeta = Math.max(0, metaVendas - vendidoVendas)
+            const pctMeta = metaVendas > 0 ? Math.min(100, Math.round((vendidoVendas / metaVendas) * 100)) : 0
+
+            return (
+              <>
+                {/* - 4 CARDS */}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #22c55e' }}>
+                    <div style={{ fontSize: 26 }}>💰</div>
+                    <div style={{ fontSize: 22, fontWeight: 800 }}>R$ {totalEstoque.toFixed(2)}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Faturamento se vender tudo</div>
+                  </div>
+                  <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #3b82f6' }}>
+                    <div style={{ fontSize: 26 }}>📦</div>
+                    <div style={{ fontSize: 22, fontWeight: 800 }}>{produtos.length} produtos / {totalQtd} unid.</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Total em estoque</div>
+                  </div>
+                  <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #f59e0b' }}>
+                    <div style={{ fontSize: 26 }}>🏆</div>
+                    <div style={{ fontSize: 16, fontWeight: 800 }}>{maisCaro ? `${maisCaro.nome} - R$ ${maisCaro.preco}` : '-'}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Produto mais caro</div>
+                  </div>
+                  <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #ec4899' }}>
+                    <div style={{ fontSize: 26 }}>🔥</div>
+                    <div style={{ fontSize: 16, fontWeight: 800 }}>{maisBarato ? `${maisBarato.nome} - R$ ${maisBarato.preco}` : '-'}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Produto mais barato</div>
+                  </div>
+                </div>
+
+                {/* - META DO MÊS */}
+                <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #22c55e' }}>
+                  <h3 style={{ margin: '0 0 8px 0', textAlign: 'center' }}>🎯 Meta do mês</h3>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                    <label style={{ color: '#e5e7eb', fontSize: 13 }}>Meta R$ <input type="number" value={metaVendas} onChange={(e) => setMetaVendas(Number(e.target.value))} style={{ width: 100, padding: 6, borderRadius: 6, background: '#2e303a', color: '#fff', border: '1px solid #4b5563' }} /></label>
+                    <label style={{ color: '#e5e7eb', fontSize: 13 }}>Já vendi R$ <input type="number" value={vendidoVendas} onChange={(e) => setVendidoVendas(Number(e.target.value))} style={{ width: 100, padding: 6, borderRadius: 6, background: '#2e303a', color: '#fff', border: '1px solid #4b5563' }} /></label>
+                  </div>
+                  {/* BARRA DE PROGRESSO */}
+                  <div style={{ background: '#2e303a', height: 22, borderRadius: 20, overflow: 'hidden' }}>
+                    <div style={{ width: `${pctMeta}%`, background: pctMeta >= 100 ? '#22c55e' : '#f59e0b', height: '100%', textAlign: 'center', color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: '22px', transition: 'width 0.3s' }}>{pctMeta}%</div>
+                  </div>
+                  <p style={{ textAlign: 'center', margin: '8px 0 0 0', color: '#e5e7eb', fontSize: 13 }}>
+                    {pctMeta >= 100 ? '🎉 Meta batida! Parabéns!' : `Falta R$ ${faltaMeta.toFixed(2)} pra bater a meta de R$ ${metaVendas.toFixed(2)}!`}
+                  </p>
+                </div>
+
+                {/*  - ALERTA ESTOQUE BAIXO */}
+                {quaseAcabando.length > 0 && (
+                  <div style={{ background: '#7f1d1d', padding: 14, borderRadius: 12, marginBottom: 12, textAlign: 'center' }}>
+                    <b>⚠️ Atenção! {quaseAcabando.length} produto(s) quase acabando:</b>
+                    <br />
+                    <span style={{ fontSize: 13 }}>{quaseAcabando.map(p => `${p.nome} (${p.quantidade} unid.)`).join(' • ')}</span>
+                  </div>
+                )}
+              </>
+            )
+          })()}
+
+          {/* ===== TABELA DE PRODUTOS - */}
+          <h3>Controle de Produtos - Time de Vendas</h3>
+          {produtos.length === 0 ? (
+            <p style={{ color: '#9ca3af' }}>Nenhum produto ainda.</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#030303' }}>
+              <thead>
+                <tr style={{ background: '#1bbe18', color: '#030303', textAlign: 'left' }}>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>ID</th>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>Nome</th>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>Preço</th>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>Qtd</th>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>Descrição</th>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>Total</th>
+                  <th style={{ padding: 8, border: '1px solid #030303' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {produtos.map((p) => (
+                  <tr key={p.id}>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}>{p.id}</td>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}><b>{p.nome}</b></td>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}>R$ {p.preco}</td>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}>{p.quantidade}</td>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}>{p.descricao}</td>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}>R$ {(Number(p.preco) * Number(p.quantidade)).toFixed(2)}</td>
+                    <td style={{ padding: 8, border: '1px solid #030303' }}>
+                      {Number(p.quantidade) === 0 ? <span style={{ background: '#ef4444', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>ESGOTADO</span>
+                      : Number(p.quantidade) < 5 ? <span style={{ background: '#f59e0b', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>QUASE ACABANDO</span>
+                      : <span style={{ background: '#22c55e', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>EM ESTOQUE</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
 
-      {/* 6.7 ANUNCIO COMPRAS - aba 3 de Compras */}
-      {aba === 'anuncio-compras' && (<div style={{ textAlign: 'center' }}><h2>📣 Anúncio Compras</h2><p style={{ color: '#9ca3af' }}>Aqui vai o anúncio do setor de Compras!</p><div style={{ background: '#2e303a', padding: 24, borderRadius: 12 }}><h3 style={{ color: '#c4b5fd' }}>🛒 COMPRAS INTELIGENTES!</h3><p>Compramos melhor, gastamos menos e sua empresa cresce!</p><a href="https://wa.me/5592984883080?text=Quero%20falar%20com%20Compras" target="_blank" style={{ background: '#8b5cf6', color: '#fff', textDecoration: 'none', padding: '10px 18px', borderRadius: 8, fontWeight: 700 }}>Falar com Compras</a></div></div>)}
-
-      {/* 6.8 ANUNCIO VENDAS - aba 3 de Vendas */}
-      {aba === 'anuncio-vendas' && (<div style={{ textAlign: 'center' }}><h2>📣 Anúncio Vendas</h2><p style={{ color: '#9ca3af' }}>Aqui vai o anúncio do setor de Vendas!</p><div style={{ background: '#2e303a', padding: 24, borderRadius: 12 }}><h3 style={{ color: '#86efac' }}>💰 VENDAS QUE NÃO PARAM!</h3><p>Nossos produtos, seus resultados! Veja a tabela de produtos e bora vender!</p><button onClick={() => setAba('vendas')} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Ver Produtos</button></div></div>)}
-
-      {/* 6.9 PERFIL MARKETING */}
-      {aba === 'perfil-marketing' && (
-        <div><h2 style={{ textAlign: 'center' }}>Perfil Marketing</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #ec4899' }} /><h3>{nomeLogado}</h3><p style={{ color: '#f9a8d4', fontWeight: 700 }}>{cargoPerfil || 'Marketing'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>{instaPerfil}</p>}{whatsPerfil && <p>{whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informacoes - Marketing</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Marketing</p><p><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p><div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}><h4>Em breve aqui</h4><p style={{ color: '#9ca3af', fontSize: 13 }}>Campanhas, leads, posts, etc.</p></div></div></div></div>
-      )}
-
-      {/* 6.10 ANUNCIO MARKETING - aceita 'anuncio' velho e 'anuncio-marketing' novo */}
+      {/* ANUNCIO MARKETING  */}
       {(aba === 'anuncio' || aba === 'anuncio-marketing') && (
         <div>
           <div onClick={() => window.open('https://www.youtube.com/', '_blank')} style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', borderRadius: 12, cursor: 'pointer', backgroundImage: 'url(/marketing.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
