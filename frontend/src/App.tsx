@@ -34,6 +34,7 @@ type Perfil = {
   whatsapp: string
 }
 
+
 // ========== API - controla o endereco do backend ==========
 // Troca aqui se mudar a porta do backend
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/pessoas`
@@ -94,16 +95,20 @@ export default function App() {
   const [busca, setBusca] = useState('')
   const [ordenarPorNome, setOrdenarPorNome] = useState(false)
   const [pagina, setPagina] = useState(1)
+  
+
+
 
   // ========== ESTADOS - LOGIN E ABA ATUAL - controlam quem esta logado e qual tela aparece ==========
   // aba pode ser: login, perfil, perfil-compras, compras, anuncio, vendas, admin
-  const [aba, setAba] = useState('login')
+  const [aba, setAba] = useState<string>('login')
   const [logadoNova, setLogadoNova] = useState(false)
   const [usuario, setUsuario] = useState('')
   const [senha, setSenha] = useState('')
   const [tipoUsuario, setTipoUsuario] = useState('')
   const [nomeLogado, setNomeLogado] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('todos')
+  const [produtos, setProdutos] = useState<any[]>([]);
 
   // ========== ESTADOS - ANUNCIO - controlam o Sobre nos e o formulario Quero crescer ==========
   const [mostrarSobre, setMostrarSobre] = useState(false)
@@ -151,8 +156,14 @@ export default function App() {
     }
   }
 
-  // ========== USEEFFECT - roda 1 vez quando abre a pagina, carrega pessoas, leads e acessos ==========
-  useEffect(() => { carregar(); carregarLeads(); carregarAcessosPerfil() }, [])
+  // Busca os produtos - só se for vendas ou admin
+    useEffect(() => {
+  if (tipoUsuario === 'vendas' || tipoUsuario === 'admin') {
+    fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`)
+      .then(res => res.json())
+      .then(dados => setProdutos(dados));
+  }
+}, [tipoUsuario]);
 
   // ========== CADASTRAR - cria pessoa nova, so admin usa ==========
   async function cadastrar() {
@@ -451,6 +462,9 @@ export default function App() {
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (
             <button onClick={() => setAba('vendas')} style={{ marginRight: 8, background: aba === 'vendas' ? '#1bbe18' : '#ecb048', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>vendas</button>
           )}
+          {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (
+            <button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-vendas') }} style={{ marginRight: 8, background: aba === 'perfil-vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Vendas</button>
+          )}
           {/* BOTAO ADMIN - so admin ve */}
           {tipoUsuario === 'admin' && (
             <button onClick={() => setAba('admin')} style={{ marginRight: 8, background: aba === 'admin' ? '#1d4ed8' : '#3b82f6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Admin</button>
@@ -490,6 +504,7 @@ export default function App() {
             // PESSOA CADASTRADA: olha o setor dela pra decidir a aba
             if (data.tipo === 'marketing') setAba('perfil-marketing')
             else if (data.tipo === 'compras') setAba('perfil-compras')
+            else if (data.tipo === 'vendas') setAba('perfil-vendas')
             else setAba('perfil')
           } else {
             setIdPessoaLogada(null)
@@ -497,7 +512,8 @@ export default function App() {
             // USUARIO FIXO: nao tem id de pessoa, cai no perfil do setor dele
             if (data.tipo === 'marketing') setAba('perfil-marketing')
             else if (data.tipo === 'compras') setAba('perfil-compras')
-            else setAba(data.tipo)
+            else if (data.tipo === 'vendas') setAba('perfil-vendas')
+              else setAba(data.tipo)
           
       }
       }}>Entrar</button>
@@ -671,6 +687,41 @@ export default function App() {
             )}
           </div>
 
+{/* ========== ABA PERFIL VENDAS - igual Perfil Compras e Perfil Marketing ========== */}
+{aba === 'perfil-vendas' && (
+  <div>
+    <h2 style={{ textAlign: 'center' }}>Perfil Vendas</h2>
+    <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin, lá no cadastro.</p>
+
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+      <div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}>
+        <img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto do perfil" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #22c55e' }} />
+        <h3 style={{ margin: '12px 0 2px 0', fontSize: 20 }}>{nomeLogado}</h3>
+        <p style={{ color: '#86efac', margin: 0, fontWeight: 700 }}>{cargoPerfil || 'Vendas'}</p>
+        {bioPerfil && <p style={{ color: '#e5e7eb', fontSize: 14, marginTop: 10 }}>{bioPerfil}</p>}
+        {instaPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '6px 0 0 0' }}>{instaPerfil}</p>}
+        {whatsPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0 0' }}>{whatsPerfil}</p>}
+        <p style={{ color: '#6b7280', fontSize: 11, marginTop: 14, borderTop: '1px solid #333', paddingTop: 10 }}>Perfil editado só pelo admin.</p>
+      </div>
+
+      <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}>
+        <h3 style={{ marginTop: 0 }}>Minhas informações - Vendas</h3>
+        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p>
+        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Email:</b> {pessoaLogada?.email || '-'}</p>
+        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p>
+        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Setor:</b> Vendas</p>
+        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p>
+
+        <div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}>
+          <h4 style={{ margin: '0 0 6px 0' }}>Em breve aqui</h4>
+          <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Aqui a gente vai colocar as outras informações de Vendas no futuro: metas, comissões, etc.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+          
+
           {/* BUSCA - busca por nome, email ou usuario */}
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <input placeholder="Buscar por nome, email ou usuário..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1) }} />
@@ -753,7 +804,35 @@ export default function App() {
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
 
       {/* ========== ABA VENDAS - so a lista de Vendas ========== */}
-      {aba === 'vendas' && <ListaSetor lista={pessoasVendas} titulo="Setor de vendas" />}
+      {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && aba === 'vendas' && (
+  <>
+    <h3>Controle de Produtos - Time de Vendas</h3>
+    <table style={{ width: '100%', borderCollapse: 'collapse', background: '#030303' }}>
+      <thead>
+        <tr style={{ background: '#1bbe18', color: '#030303', textAlign: 'left' }}>
+          <th style={{ padding: 8, border: '1px solid #030303' }}>ID</th>
+          <th style={{ padding: 8, border: '1px solid #030303' }}>Nome</th>
+          <th style={{ padding: 8, border: '1px solid #030303' }}>Preço</th>
+          <th style={{ padding: 8, border: '1px solid #030303' }}>Qtd</th>
+          <th style={{ padding: 8, border: '1px solid #030303' }}>Descrição</th>
+          <th style={{ padding: 8, border: '1px solid #030303' }}>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {(produtos || []).map((p) => (
+          <tr key={p.id}>
+            <td style={{ padding: 8, border: '1px solid #030303' }}>{p.id}</td>
+            <td style={{ padding: 8, border: '1px solid #030303)' }}><b>{p.nome}</b></td>
+            <td style={{ padding: 8, border: '1px solid #030303' }}>R$ {p.preco}</td>
+            <td style={{ padding: 8, border: '1px solid #030303' }}>{p.quantidade}</td>
+            <td style={{ padding: 8, border: '1px solid #030303' }}>{p.descricao}</td>
+            <td style={{ padding: 8, border: '1px solid #030303' }}>R$ {(Number(p.preco) * Number(p.quantidade)).toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </>
+)}
 
       {/* ========== ABA PERFIL MARKETING - aba 1 de Marketing, so perfil, pessoa NAO edita ========== */}
       {aba === 'perfil-marketing' && (

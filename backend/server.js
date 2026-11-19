@@ -135,13 +135,16 @@ async function criarTabela() {
     `);
       
     // TABELA PRODUTOS - AINDA EM TESTE, backend pronto, tela ainda nao feita
-    await pool.query(`CREATE TABLE IF NOT EXISTS produtos (
-      id SERIAL PRIMARY KEY,
-      nome VARCHAR(100) NOT NULL,
-      preco NUMERIC(10,2) NOT NULL DEFAULT 0,
-      quantidade INT NOT NULL DEFAULT 0,
-      setor VARCHAR(20) DEFAULT 'admin'
-    )`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS produtos (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        preco NUMERIC(10,2) NOT NULL DEFAULT 0,
+        quantidade INT NOT NULL DEFAULT 0,
+        descricao TEXT DEFAULT '',
+        setor VARCHAR(20) DEFAULT 'vendas',
+        criado_em TIMESTAMPTZ DEFAULT now()
+      )`);
     
     // ALTER TABLE - controla as colunas novas pra quem ja tinha a tabela antiga
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
@@ -171,6 +174,23 @@ app.get('/pessoas', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+// Busca os produtos - SO vendas e admin podem ver
+app.get('/produtos', async (req, res) => {
+  try {
+    const tipo = req.query.tipo;
+
+    if (tipo !== 'vendas' && tipo !== 'admin') {
+      return res.status(403).json({ erro: 'So vendas e admin podem ver produtos' });
+    }
+
+    const result = await pool.query("SELECT id, nome, preco, quantidade, descricao, setor FROM produtos WHERE setor = 'vendas' ORDER BY id");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro ao buscar produtos' });
   }
 });
 
@@ -390,16 +410,6 @@ app.delete('/pessoas/:id', async (req, res) => {
   }
 });
 
-// ========== PRODUTOS - Buscar todos ==========
-app.get('/produtos', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM produtos ORDER BY id');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro no banco' });
-  }
-});
 
 // ========== PRODUTOS - Cadastrar ==========
 app.post('/produtos', async (req, res) => {

@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS compras (
 );
 
 
-{*/ ainda falta dicionar produtos */}
+/* ainda falta dicionar produtos */
 CREATE TABLE IF NOT EXISTS produtos (
   id SERIAL PRIMARY KEY,
   nome VARCHAR(100) NOT NULL,
@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS produtos (
   criado_em TIMESTAMPTZ DEFAULT now()
 );
 
-{*/ Perfil de usuarios adicionados apenas para admin modificar info das páginas*/}
+
+/* Perfil de usuarios adicionados apenas para admin modificar info das páginas*/
 CREATE TABLE IF NOT EXISTS perfil_usuario (
   id SERIAL PRIMARY KEY,
   pessoa_id INTEGER REFERENCES pessoas(id) ON DELETE CASCADE,
@@ -51,7 +52,7 @@ CREATE TABLE IF NOT EXISTS perfil_usuario (
   instagram VARCHAR(100),
   whatsapp VARCHAR(20)
 );
- {*/ DEIXA OS ACESSOS DE PERFIL*/}
+ /* DEIXA OS ACESSOS DE PERFIL*/
 CREATE TABLE IF NOT EXISTS acessos_perfil (
   id SERIAL PRIMARY KEY,
   quem_viu_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
@@ -69,15 +70,23 @@ CREATE TABLE IF NOT EXISTS leads (
   criado_em TIMESTAMP DEFAULT NOW()
 );
 
-
-{*/ CASO NÃO TENHA A TABELA ELA É ADICIONADA NESSAS COLUNAS */}
-ALTER TABLE produtos ADD COLUMN IF NOT EXISTS quantidade INT DEFAULT0;
+/*  docker exec -it starter_crud psql -U postgres -d crudstarter9 */
+/* SELECT id, nome, preco, quantidade, setor FROM produtos ORDER BY id; */
+/* CASO NÃO TENHA A TABELA ELA É ADICIONADA NESSAS COLUNAS */
+SELECT column_name FROM information_schema.columns WHERE table_name = 'produtos';
+ALTER TABLE produtos ADD COLUMN IF NOT EXISTS quantidade INT DEFAULT 0;
 ALTER TABLE produtos ADD COLUMN IF NOT EXISTS descricao TEXT ;
 ALTER TABLE produtos ADD COLUMN IF NOT EXISTS setor VARCHAR(20) DEFAULT 'vendas';
 ALTER TABLE produtos ADD COLUMN IF NOT EXISTS criado_em TIMESTAMPTZ DEFAULT now();
 
 
-{*/ CRIA O MATERIAL QUE VAI PREENCHER AS TABELAS */}
+INSERT INTO produtos (nome, preco, quantidade, descricao, setor) VALUES
+  ('Tecpix', 299.90, 10, 'Camera mais vendida do mercado!', 'vendas'),
+  ('Caneta', 2.99, 5, 'Caneta esferografica', 'vendas'),
+  ('Mouse gamer', 699.50, 2, 'Mouse gamer ergonomico', 'vendas'),
+  ('SSD SATA 3 2TB', 2999.99, 1, 'SSD elite', 'vendas'),
+  ('Teclado gamer', 150, 49, 'Teclado mecanico gamer', 'vendas')
+ON CONFLICT DO NOTHING;
 
 INSERT INTO usuarios (usuario, senha, tipo) VALUES
 ('admin', '1234', 'admin'),
@@ -86,5 +95,3 @@ INSERT INTO usuarios (usuario, senha, tipo) VALUES
 ('marketing', '1234', 'marketing')
 ON CONFLICT (usuario) DO NOTHING;
 
-INSERT INTO produtos (nome, preco, quantidade, descricao, setor) VALUES
-  ('Tecpix', 299.90, 10, 'Câmera mais vendida do mercado!', 'vendas');
