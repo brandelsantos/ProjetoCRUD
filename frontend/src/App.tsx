@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
+// ========== TIPO PESSOA - controla os campos da tabela pessoas ==========
 type Pessoa = {
   id: number
   nome: string
@@ -12,6 +13,7 @@ type Pessoa = {
   senha?: string | null
 }
 
+// ========== TIPO LEAD - controla os campos da tabela leads (Quero crescer) ==========
 type Lead = {
   id: number
   nome: string
@@ -20,6 +22,8 @@ type Lead = {
   criado_em?: string
 }
 
+// ========== TIPO PERFIL - controla os campos da tabela perfil_usuario ==========
+// ATENCAO: se der erro aqui, apaga a linha do instagram e digita com a mao
 type Perfil = {
   id?: number
   pessoa_id: number
@@ -30,8 +34,12 @@ type Perfil = {
   whatsapp: string
 }
 
+// ========== API - controla o endereco do backend ==========
+// Troca aqui se mudar a porta do backend
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/pessoas`
 
+// ========== VALIDAR - controla as regras do cadastro ==========
+// Nome, email, telefone, idade, usuario, senha
 function validar(nome: string, email: string, telefone: string, idade: string, usuario: string, senha: string) {
   if (!nome.trim()) return 'Nome é obrigatório'
   if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nome.trim())) return 'Nome não pode ter caracteres especiais, só letras e espaço'
@@ -52,6 +60,7 @@ function validar(nome: string, email: string, telefone: string, idade: string, u
   return null
 }
 
+// ========== FORMATAR TELEFONE - controla a mascara (92) 99999-9999 ==========
 function formatarTelefone(valor: string) {
   const soNumeros = valor.replace(/\D/g, '').slice(0, 11)
   if (soNumeros.length <= 2) return soNumeros
@@ -60,6 +69,7 @@ function formatarTelefone(valor: string) {
   return `(${soNumeros.slice(0, 2)}) ${soNumeros.slice(2, 7)}-${soNumeros.slice(7)}`
 }
 
+// ========== COR SETOR - controla a cor da bolinha do setor na lista ==========
 function corSetor(setor?: string | null) {
   if (setor === 'compras') return '#8b5cf6'
   if (setor === 'marketing') return '#ec4899'
@@ -68,6 +78,7 @@ function corSetor(setor?: string | null) {
 }
 
 export default function App() {
+  // ========== ESTADOS - PESSOAS - controlam a lista e o formulario de cadastro ==========
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [nomeEdit, setNomeEdit] = useState('')
   const [emailEdit, setEmailEdit] = useState('')
@@ -83,6 +94,9 @@ export default function App() {
   const [busca, setBusca] = useState('')
   const [ordenarPorNome, setOrdenarPorNome] = useState(false)
   const [pagina, setPagina] = useState(1)
+
+  // ========== ESTADOS - LOGIN E ABA ATUAL - controlam quem esta logado e qual tela aparece ==========
+  // aba pode ser: login, perfil, perfil-compras, compras, anuncio, vendas, admin
   const [aba, setAba] = useState('login')
   const [logadoNova, setLogadoNova] = useState(false)
   const [usuario, setUsuario] = useState('')
@@ -90,13 +104,17 @@ export default function App() {
   const [tipoUsuario, setTipoUsuario] = useState('')
   const [nomeLogado, setNomeLogado] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('todos')
+
+  // ========== ESTADOS - ANUNCIO - controlam o Sobre nos e o formulario Quero crescer ==========
   const [mostrarSobre, setMostrarSobre] = useState(false)
   const [nomeLead, setNomeLead] = useState('')
   const [whatsLead, setWhatsLead] = useState('')
-  const [precisaLead, setPrecisaLead] = useState('Quero mais clientes no instagram')
+  const [precisaLead, setPrecisaLead] = useState('Quero mais clientes no insta')
   const [enviadoLead, setEnviadoLead] = useState(false)
   const [leads, setLeads] = useState<Lead[]>([])
   const [enviandoLead, setEnviandoLead] = useState(false)
+
+  // ========== ESTADOS - PERFIL DA PESSOA LOGADA - so mostra, NAO edita ==========
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [fotoPerfil, setFotoPerfil] = useState('/desenho.webp')
   const [bioPerfil, setBioPerfil] = useState('')
@@ -105,6 +123,8 @@ export default function App() {
   const [whatsPerfil, setWhatsPerfil] = useState('')
   const [idPessoaLogada, setIdPessoaLogada] = useState<number | null>(null)
   const [acessosPerfil, setAcessosPerfil] = useState<any[]>([])
+
+  // ========== ESTADOS - PERFIL QUE O ADMIN EDITA - so o admin usa esses ==========
   const [idPessoaPerfilAdmin, setIdPessoaPerfilAdmin] = useState<number | null>(null)
   const [fotoAdmin, setFotoAdmin] = useState('/desenho.webp')
   const [bioAdmin, setBioAdmin] = useState('')
@@ -112,6 +132,7 @@ export default function App() {
   const [instaAdmin, setInstaAdmin] = useState('')
   const [whatsAdmin, setWhatsAdmin] = useState('')
 
+  // ========== CARREGAR - busca a lista de pessoas no backend ==========
   async function carregar() {
     try {
       setCarregando(true)
@@ -130,8 +151,10 @@ export default function App() {
     }
   }
 
+  // ========== USEEFFECT - roda 1 vez quando abre a pagina, carrega pessoas, leads e acessos ==========
   useEffect(() => { carregar(); carregarLeads(); carregarAcessosPerfil() }, [])
 
+  // ========== CADASTRAR - cria pessoa nova, so admin usa ==========
   async function cadastrar() {
     const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit, usuarioEdit, senhaEdit)
     if (erro) { setMensagem(erro); return }
@@ -157,6 +180,7 @@ export default function App() {
     } catch { setMensagem('Erro ao conectar no backend') }
   }
 
+  // ========== SALVAR EDICAO - salva a edicao da pessoa, so admin usa ==========
   async function salvarEdicao() {
     if (editandoId === null) return
     const erro = validar(nomeEdit, emailEdit, telefoneEdit, idadeEdit, usuarioEdit, senhaEdit)
@@ -184,6 +208,7 @@ export default function App() {
     } catch { setMensagem('Erro ao conectar no backend') }
   }
 
+  // ========== DELETAR - apaga 1 pessoa, so admin usa ==========
   async function deletar(id: number, nomePessoa: string) {
     if (!confirm(`Tem certeza que quer deletar ${nomePessoa}?`)) return
     try {
@@ -194,6 +219,7 @@ export default function App() {
     } catch { setMensagem('Erro ao conectar no backend') }
   }
 
+  // ========== LIMPAR TUDO - apaga todas as pessoas, so admin usa ==========
   async function limparTudo() {
     if (pessoas.length === 0) return
     if (!confirm(`Tem certeza que quer apagar TODAS as ${pessoas.length} pessoas?`)) return
@@ -207,6 +233,7 @@ export default function App() {
     } catch { setMensagem('Erro ao limpar tudo') }
   }
 
+  // ========== COMECAR EDITAR - joga os dados da pessoa pro formulario e abre o perfil dela pro admin editar ==========
   function comecarEditar(pessoa: Pessoa) {
     setEditandoId(pessoa.id)
     setNomeEdit(pessoa.nome)
@@ -220,6 +247,7 @@ export default function App() {
     carregarPerfilAdmin(pessoa.id)
   }
 
+  // ========== CANCELAR EDICAO - limpa o formulario e sai do modo editar ==========
   function cancelarEdicao() {
     setEditandoId(null)
     setNomeEdit('')
@@ -231,6 +259,7 @@ export default function App() {
     setSenhaEdit('')
   }
 
+  // ========== SAIR - limpa tudo e volta pra tela de login ==========
   function sair() {
     setLogadoNova(false)
     setUsuario('')
@@ -248,6 +277,7 @@ export default function App() {
     setIdPessoaPerfilAdmin(null)
   }
 
+  // ========== CARREGAR LEADS - busca os leads do Quero crescer pro admin ver ==========
   async function carregarLeads() {
     try {
       const res = await fetch(`${API.replace('/pessoas', '')}/leads`)
@@ -256,12 +286,14 @@ export default function App() {
     } catch { }
   }
 
+  // ========== APAGAR LEAD - botao Ja atendi, tira o lead da lista ==========
   async function apagarLead(id: number, nomeLeadApagar: string) {
     if (!confirm(`Já atendeu ${nomeLeadApagar}? Apagar da lista?`)) return
     await fetch(`${API.replace('/pessoas', '')}/leads/${id}`, { method: 'DELETE' })
     carregarLeads()
   }
 
+  // ========== CARREGAR PERFIL - busca o perfil da pessoa logada pra MOSTRAR, nao edita ==========
   async function carregarPerfil(pessoaId: number) {
     try {
       const res = await fetch(`${API.replace('/pessoas', '')}/perfil/${pessoaId}`)
@@ -277,6 +309,7 @@ export default function App() {
     } catch { }
   }
 
+  // ========== CARREGAR PERFIL ADMIN - busca o perfil da pessoa que o admin escolheu pra editar ==========
   async function carregarPerfilAdmin(pessoaId: number) {
     setIdPessoaPerfilAdmin(pessoaId)
     try {
@@ -292,6 +325,7 @@ export default function App() {
     }
   }
 
+  // ========== SALVAR PERFIL ADMIN - salva o perfil, TRAVADO: so admin consegue ==========
   async function salvarPerfilAdmin() {
     if (tipoUsuario !== 'admin') { alert('Só o admin pode editar perfil.'); return }
     if (!idPessoaPerfilAdmin) { alert('Escolhe a pessoa primeiro.'); return }
@@ -306,6 +340,7 @@ export default function App() {
     if (idPessoaLogada === idPessoaPerfilAdmin) carregarPerfil(idPessoaPerfilAdmin)
   }
 
+  // ========== CARREGAR ACESSOS PERFIL - busca quem viu qual perfil, pro admin ver ==========
   async function carregarAcessosPerfil() {
     try {
       const res = await fetch(`${API.replace('/pessoas', '')}/acessos-perfil`)
@@ -314,11 +349,13 @@ export default function App() {
     } catch { }
   }
 
+  // ========== DASHBOARD - conta quantas pessoas tem em cada setor ==========
   const totalCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras').length
   const totalVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas').length
   const totalMarketing = pessoas.filter(p => (p.setor || 'admin') === 'marketing').length
   const totalAdmin = pessoas.filter(p => (p.setor || 'admin') === 'admin').length
 
+  // ========== FILTRO E ORDENACAO - controla busca, filtro por setor e A-Z ==========
   const pessoasFiltradas = pessoas
     .filter((p) => {
       const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase()) || (p.usuario || '').toLowerCase().includes(busca.toLowerCase())
@@ -330,17 +367,20 @@ export default function App() {
       return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase())
     })
 
+  // ========== LISTAS POR SETOR - admin aparece em todo mundo ==========
   const pessoasCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras' || (p.setor || 'admin') === 'admin')
   const pessoasVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin')
 
+  // ========== PAGINACAO - controla quantas pessoas aparecem por pagina, 5 por pagina ==========
   const porPagina = 5
   const totalPaginas = Math.max(1, Math.ceil(pessoasFiltradas.length / porPagina))
   const inicio = (pagina - 1) * porPagina
   const pessoasDaPagina = pessoasFiltradas.slice(inicio, inicio + porPagina)
 
-  // Dados da pessoa logada pra mostrar na aba Meu Perfil
+  // ========== PESSOA LOGADA - acha os dados da pessoa logada na lista ==========
   const pessoaLogada = pessoas.find(p => p.id === idPessoaLogada)
 
+  // ========== LISTA SETOR - componente que mostra a lista de um setor (Compras / Vendas) ==========
   function ListaSetor({ lista, titulo }: { lista: Pessoa[], titulo: string }) {
     return (
       <div style={{ textAlign: 'center', marginTop: 8 }}>
@@ -360,6 +400,7 @@ export default function App() {
     )
   }
 
+  // ========== CARD DASHBOARD - componente do cartao do dashboard (Total, Compras, Vendas, Marketing) ==========
   function CardDashboard({ titulo, valor, cor, ativo, aoClicar, emoji }: { titulo: string, valor: number, cor: string, ativo: boolean, aoClicar: () => void, emoji: string }) {
     return (
       <button onClick={() => { aoClicar(); setPagina(1) }} style={{ background: ativo ? cor : '#2e303a', color: '#fff', border: ativo ? `2px solid ${cor}` : '1px solid #4b5563', padding: '16px 12px', borderRadius: 12, cursor: 'pointer', flex: 1, minWidth: 120, textAlign: 'center' }}>
@@ -373,7 +414,9 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 20, height: 'auto', overflow: 'visible' }}>
-    {aba !== 'anuncio' && aba !== 'perfil' && aba !== 'perfil-compras' && (        <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
+      {/* ========== CABECALHO - titulo Cadastro de Pessoas, NAO aparece em Anuncio, Perfil e Perfil Compras ========== */}
+      {aba !== 'anuncio' && aba !== 'perfil' && aba !== 'perfil-compras' && (
+        <div className="perfil" style={{ textAlign: 'center', marginBottom: 20 }}>
           <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
           <h1 style={{ lineHeight: 1.2, marginTop: 16, marginBottom: 8, fontSize: 32, whiteSpace: 'normal' }}>Cadastro de Pessoas - CRUD</h1>
           <p style={{ color: '#e5e7eb', fontSize: 16, fontWeight: 600, marginTop: 4 }}>Total: {pessoas.length} pessoas</p>
@@ -381,32 +424,39 @@ export default function App() {
         </div>
       )}
 
+      {/* ========== BOTOES DE NAVEGACAO - controlam pra qual aba vai ========== */}
       {logadoNova && (
-        <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: (aba === 'anuncio' || aba === 'perfil') ? 16 : 0 }}>
-          {/* ABA 1 - MEU PERFIL - todo mundo que logou com pessoa cadastrada vê */}
+        <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: (aba === 'anuncio' || aba === 'perfil' || aba === 'perfil-compras') ? 16 : 0 }}>
+          {/* BOTAO MEU PERFIL - so aparece se logou com pessoa cadastrada */}
           {idPessoaLogada && (
             <button onClick={() => setAba('perfil')} style={{ marginRight: 8, background: aba === 'perfil' ? '#0f766e' : '#14b8a6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>👤 Meu Perfil</button>
           )}
+          {/* BOTAO PERFIL COMPRAS - aba 1 de Compras, so perfil */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (
-  <button onClick={() => setAba('perfil-compras')} style={{ marginRight: 8, background: aba === 'perfil-compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Compras</button>
-)}
+            <button onClick={() => setAba('perfil-compras')} style={{ marginRight: 8, background: aba === 'perfil-compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Compras</button>
+          )}
+          {/* BOTAO COMPRAS - aba 2 de Compras, so a lista */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (
             <button onClick={() => setAba('compras')} style={{ marginRight: 8, background: aba === 'compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Compras</button>
           )}
-          {/* ABA 2 - ANÚNCIO - era a aba Marketing */}
+          {/* BOTAO ANUNCIO - era a aba Marketing, so o banner */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (
             <button onClick={() => setAba('anuncio')} style={{ marginRight: 8, background: aba === 'anuncio' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio</button>
           )}
+          {/* BOTAO VENDAS - aba de Vendas, so a lista */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (
             <button onClick={() => setAba('vendas')} style={{ marginRight: 8, background: aba === 'vendas' ? '#1bbe18' : '#ecb048', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>vendas</button>
           )}
+          {/* BOTAO ADMIN - so admin ve */}
           {tipoUsuario === 'admin' && (
             <button onClick={() => setAba('admin')} style={{ marginRight: 8, background: aba === 'admin' ? '#1d4ed8' : '#3b82f6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Admin</button>
           )}
+          {/* BOTAO SAIR - volta pro login */}
           <button onClick={sair} style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Sair</button>
         </div>
       )}
 
+      {/* ========== TELA LOGIN - controla entrada, decide pra qual aba vai depois de logar ========== */}
       {aba === 'login' && (
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <h2>Login</h2>
@@ -429,7 +479,7 @@ export default function App() {
             setTipoUsuario(data.tipo)
             setNomeLogado(data.nome || usuario)
             setLogadoNova(true)
-            // Se é pessoa cadastrada, cai na aba Meu Perfil. Se é usuário fixo, cai no setor dele.
+            // DECIDE ABA POS LOGIN: pessoa cadastrada -> Meu Perfil / fixo marketing -> Anuncio / fixo compras -> Perfil Compras
             if (data.id) {
               setIdPessoaLogada(data.id)
               carregarPerfil(data.id)
@@ -439,19 +489,20 @@ export default function App() {
               setPerfil(null)
               if (data.tipo === 'marketing') setAba('anuncio')
               else if (data.tipo === 'compras') setAba('perfil-compras')
-              else setAba(data.tipo)            }
+              else setAba(data.tipo)
+            }
           }}>Entrar</button>
         </div>
       )}
 
-      {/* ========== ABA 1 - MEU PERFIL ========== */}
+      {/* ========== ABA MEU PERFIL - aba 1 geral, so mostra o perfil, pessoa NAO edita ========== */}
       {aba === 'perfil' && (
         <div>
           <h2 style={{ textAlign: 'center' }}>👤 Meu Perfil</h2>
           <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin, lá no cadastro.</p>
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
-            {/* Cartão do perfil */}
+            {/* CARTAO DO PERFIL - foto, cargo, bio, insta, whats */}
             <div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}>
               <img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto do perfil" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #ec4899' }} />
               <h3 style={{ margin: '12px 0 2px 0', fontSize: 20 }}>{nomeLogado}</h3>
@@ -462,7 +513,7 @@ export default function App() {
               <p style={{ color: '#6b7280', fontSize: 11, marginTop: 14, borderTop: '1px solid #333', paddingTop: 10 }}>🔒 Perfil editado só pelo admin.<br />Fala com o admin pra mudar.</p>
             </div>
 
-            {/* Outras informações - aqui a gente vai colocando no futuro */}
+            {/* MINHAS INFORMACOES - dados do cadastro + espaco pra colocar coisa no futuro */}
             <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}>
               <h3 style={{ marginTop: 0 }}>Minhas informações</h3>
               <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p>
@@ -472,6 +523,7 @@ export default function App() {
               <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Setor:</b> {pessoaLogada?.setor || tipoUsuario}</p>
               <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p>
 
+              {/* BLOCO FUTURO - aqui a gente coloca avisos, tarefas, etc no futuro */}
               <div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}>
                 <h4 style={{ margin: '0 0 6px 0' }}>📌 Em breve aqui</h4>
                 <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Aqui a gente vai colocar as outras informações no futuro: avisos, tarefas, histórico, etc. Por enquanto é só o perfil + dados do cadastro.</p>
@@ -481,8 +533,10 @@ export default function App() {
         </div>
       )}
 
+      {/* ========== ABA ADMIN - so admin ve, dashboard + leads + acessos + cadastro + perfil pra editar ========== */}
       {aba === 'admin' && (
         <div>
+          {/* DASHBOARD - cartoes Total, Compras, Vendas, Marketing */}
           <div style={{ marginBottom: 20 }}>
             <h2 style={{ textAlign: 'center', marginBottom: 12 }}>📊 Dashboard</h2>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -503,6 +557,7 @@ export default function App() {
             )}
           </div>
 
+          {/* LEADS - lista do Quero crescer, so admin ve */}
           <div style={{ background: '#2e303a', border: '1px solid #ec4899', padding: 16, borderRadius: 12, marginBottom: 20 }}>
             <h2 style={{ textAlign: 'center', marginTop: 0 }}>📣 Leads do Marketing - {leads.length}</h2>
             {leads.length === 0 ? (
@@ -523,6 +578,7 @@ export default function App() {
             <p style={{ textAlign: 'center', marginBottom: 0 }}><button onClick={carregarLeads} style={{ background: '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Atualizar leads</button></p>
           </div>
 
+          {/* ACESSOS PERFIL - quem viu qual perfil, so admin ve */}
           <div style={{ background: '#2e303a', border: '1px solid #3b82f6', padding: 16, borderRadius: 12, marginBottom: 20 }}>
             <h2 style={{ textAlign: 'center', marginTop: 0 }}>👀 Acessos de Perfil - {acessosPerfil.length}</h2>
             {acessosPerfil.length === 0 ? (
@@ -540,6 +596,7 @@ export default function App() {
             <p style={{ textAlign: 'center', marginBottom: 0 }}><button onClick={carregarAcessosPerfil} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Atualizar acessos</button></p>
           </div>
 
+          {/* FORMULARIO CADASTRO - cria e edita pessoa, so admin usa */}
           <div style={{ textAlign: 'center' }}>
             <input placeholder="Nome" value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} />
             <input placeholder="Email" value={emailEdit} onChange={(e) => setEmailEdit(e.target.value)} style={{ marginLeft: 8 }} />
@@ -573,6 +630,7 @@ export default function App() {
             )}
           </div>
 
+          {/* PERFIL PRA ADMIN EDITAR - unico lugar onde perfil pode ser editado */}
           <div style={{ background: '#1f2028', border: '1px solid #ec4899', padding: 16, borderRadius: 12, marginTop: 20 }}>
             <h2 style={{ textAlign: 'center', marginTop: 0 }}>👤 Perfil da Pessoa - Só o Admin edita</h2>
             <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 0 }}>A pessoa só vê o perfil dela. Ela não consegue editar.</p>
@@ -591,7 +649,7 @@ export default function App() {
                 <br />
                 <input placeholder="Cargo - ex: Designer" value={cargoAdmin} onChange={(e) => setCargoAdmin(e.target.value)} style={{ width: '100%', maxWidth: 400, marginBottom: 8 }} />
                 <br />
-                <input placeholder="Instagram - ex: @seu.nome" value={instaAdmin} onChange={(e) => setInstaAdmin(e.target.value)} style={{ width: '100%', maxWidth: 400, marginBottom: 8 }} />
+                <input placeholder="Insta - ex: @seu.nome" value={instaAdmin} onChange={(e) => setInstaAdmin(e.target.value)} style={{ width: '100%', maxWidth: 400, marginBottom: 8 }} />
                 <br />
                 <input placeholder="WhatsApp" value={whatsAdmin} onChange={(e) => setWhatsAdmin(formatarTelefone(e.target.value))} style={{ width: '100%', maxWidth: 400, marginBottom: 8 }} />
                 <br />
@@ -604,20 +662,24 @@ export default function App() {
             )}
           </div>
 
+          {/* BUSCA - busca por nome, email ou usuario */}
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <input placeholder="Buscar por nome, email ou usuário..." value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1) }} />
             {busca && <button onClick={() => { setBusca(''); setPagina(1) }} style={{ marginLeft: 8, background: '#6b7280', color: '#ffffff', border: 'none', padding: '10px 12px', borderRadius: 8, cursor: 'pointer' }}>X</button>}
           </div>
 
+          {/* MENSAGEM - verde sucesso / vermelho erro */}
           {mensagem && <p style={{ textAlign: 'center', background: mensagem.includes('sucesso') ? '#22c55e' : '#ef4444', color: '#ffffff', padding: '10px', borderRadius: 8, fontWeight: 600 }}>{mensagem}</p>}
 
           <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>Mostrando {pessoasDaPagina.length} de {pessoasFiltradas.length} pessoas {filtroSetor !== 'todos' ? `(filtro: ${filtroSetor})` : ''}</p>
 
+          {/* BOTOES ORDENAR E LIMPAR TUDO */}
           <div style={{ textAlign: 'center' }}>
             <button onClick={() => setOrdenarPorNome(!ordenarPorNome)} style={{ background: '#1f2028', color: '#ffffff', border: '1px solid #4b5563', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', marginTop: 8 }}>{ordenarPorNome ? 'Ordenado A-Z' : 'Ordenar A-Z'}</button>
             <button onClick={limparTudo} style={{ marginLeft: 8, background: '#ef4444', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Limpar Tudo</button>
           </div>
 
+          {/* LISTA DE PESSOAS - com botao Editar e Deletar */}
           {carregando ? <p style={{ textAlign: 'center' }}>Carregando...</p> : (
             <ul style={{ padding: 0 }}>
               {pessoasDaPagina.map((p) => (
@@ -632,6 +694,7 @@ export default function App() {
             </ul>
           )}
 
+          {/* PAGINACAO - Anterior / Proxima */}
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1} style={{ background: pagina === 1 ? '#4b5563' : '#3b82f6', color: '#ffffff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: pagina === 1 ? 'not-allowed' : 'pointer', marginRight: 8 }}>Anterior</button>
             <span style={{ color: '#e5e7eb' }}>Pagina {pagina} de {totalPaginas}</span>
@@ -640,54 +703,63 @@ export default function App() {
         </div>
       )}
 
-      {/* AREA COMPRAS - ABA COM PERFIL */}
-{aba === 'perfil-compras' && (
-  <div>
-    <h2 style={{ textAlign: 'center' }}>Perfil Compras</h2>
-    <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin, la no cadastro.</p>
+      {/* ========== ABA PERFIL COMPRAS - aba 1 de Compras, so perfil, pessoa NAO edita ========== */}
+      {aba === 'perfil-compras' && (
+        <div>
+          <h2 style={{ textAlign: 'center' }}>Perfil Compras</h2>
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin, la no cadastro.</p>
 
-    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
-      <div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}>
-        <img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto do perfil" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #8b5cf6' }} />
-        <h3 style={{ margin: '12px 0 2px 0', fontSize: 20 }}>{nomeLogado}</h3>
-        <p style={{ color: '#c4b5fd', margin: 0, fontWeight: 700 }}>{cargoPerfil || 'Compras'}</p>
-        {bioPerfil && <p style={{ color: '#e5e7eb', fontSize: 14, marginTop: 10 }}>{bioPerfil}</p>}
-        {instaPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '6px 0 0 0' }}>{instaPerfil}</p>}
-        {whatsPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0 0' }}>{whatsPerfil}</p>}
-        <p style={{ color: '#6b7280', fontSize: 11, marginTop: 14, borderTop: '1px solid #333', paddingTop: 10 }}>Perfil editado so pelo admin.</p>
-      </div>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start' }}>
+            {/* CARTAO PERFIL COMPRAS */}
+            <div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}>
+              <img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto do perfil" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #8b5cf6' }} />
+              <h3 style={{ margin: '12px 0 2px 0', fontSize: 20 }}>{nomeLogado}</h3>
+              <p style={{ color: '#c4b5fd', margin: 0, fontWeight: 700 }}>{cargoPerfil || 'Compras'}</p>
+              {bioPerfil && <p style={{ color: '#e5e7eb', fontSize: 14, marginTop: 10 }}>{bioPerfil}</p>}
+              {instaPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '6px 0 0 0' }}>{instaPerfil}</p>}
+              {whatsPerfil && <p style={{ color: '#9ca3af', fontSize: 13, margin: '4px 0 0 0' }}>{whatsPerfil}</p>}
+              <p style={{ color: '#6b7280', fontSize: 11, marginTop: 14, borderTop: '1px solid #333', paddingTop: 10 }}>Perfil editado so pelo admin.</p>
+            </div>
 
-      <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}>
-        <h3 style={{ marginTop: 0 }}>Minhas informacoes - Compras</h3>
-        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p>
-        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Email:</b> {pessoaLogada?.email || '-'}</p>
-        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p>
-        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Setor:</b> Compras</p>
-        <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p>
+            {/* INFORMACOES COMPRAS + BLOCO FUTURO */}
+            <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}>
+              <h3 style={{ marginTop: 0 }}>Minhas informacoes - Compras</h3>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Email:</b> {pessoaLogada?.email || '-'}</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Setor:</b> Compras</p>
+              <p style={{ color: '#e5e7eb', margin: '6px 0' }}><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p>
 
-        <div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}>
-          <h4 style={{ margin: '0 0 6px 0' }}>Em breve aqui</h4>
-          <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Aqui a gente vai colocar as outras informacoes de Compras no futuro: pedidos, fornecedores, etc.</p>
+              {/* BLOCO FUTURO COMPRAS - pedidos, fornecedores, etc */}
+              <div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}>
+                <h4 style={{ margin: '0 0 6px 0' }}>Em breve aqui</h4>
+                <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Aqui a gente vai colocar as outras informacoes de Compras no futuro: pedidos, fornecedores, etc.</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
+      {/* ========== ABA COMPRAS - aba 2 de Compras, so a lista ========== */}
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
+
+      {/* ========== ABA VENDAS - so a lista de Vendas ========== */}
       {aba === 'vendas' && <ListaSetor lista={pessoasVendas} titulo="Setor de vendas" />}
 
-      {/* ========== ABA 2 - ANÚNCIO (era Marketing) ========== */}
+      {/* ========== ABA ANUNCIO - era Marketing, so banner + Sobre + Servicos + Quero crescer ========== */}
       {aba === 'anuncio' && (
         <div>
+          {/* BANNER CLICAVEL - clica e abre o YouTube */}
           <div
             onClick={() => window.open('https://www.youtube.com/', '_blank')}
             style={{ position: 'relative', width: '100%', height: '100vh', margin: 0, overflow: 'hidden', borderRadius: 12, display: 'block', cursor: 'pointer', backgroundImage: 'url(/marketing.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
           >
+            {/* FAIXA DO BANNER - texto MARKETING IDEAL PARA VOCE */}
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: '#5a5a5a', color: '#fff', padding: '16px 20px', fontSize: 28, fontWeight: 800, boxSizing: 'border-box' }}>
               MARKETING IDEAL PARA VOCÊ!
             </div>
 
+            {/* BOTOES DO BANNER - Sobre nos e Entre em contato */}
             <div style={{ position: 'absolute', left: 20, bottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <button onClick={(e) => { e.stopPropagation(); setMostrarSobre(!mostrarSobre) }} style={{ background: '#6b6b6b', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: 10, fontSize: 18, fontWeight: 700, width: 'fit-content', cursor: 'pointer' }}>
                 ⓘ Sobre nós
@@ -698,6 +770,7 @@ export default function App() {
             </div>
           </div>
 
+          {/* SOBRE NOS - abre quando clica no botao Sobre nos */}
           {mostrarSobre && (
             <div id="sobre" style={{ background: '#2e303a', margin: '12px 0', padding: 20, borderRadius: 12, textAlign: 'left', color: '#e5e7eb', maxHeight: '60vh', overflowY: 'auto' }}>
               <h2 style={{ marginTop: 0, textAlign: 'center' }}>Sobre nós</h2>
@@ -713,6 +786,7 @@ export default function App() {
             </div>
           )}
 
+          {/* SERVICOS - 3 caixas: Posts, Anuncios, Logo */}
           <div style={{ padding: '24px 0', textAlign: 'center' }}>
             <h2 style={{ marginBottom: 4 }}>O que fazemos por você</h2>
             <p style={{ color: '#9ca3af', marginTop: 0 }}>Escolha o que sua empresa precisa e fale com a gente</p>
@@ -720,13 +794,13 @@ export default function App() {
               <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 200, maxWidth: 300 }}>
                 <div style={{ fontSize: 32 }}>📱</div>
                 <h3 style={{ margin: '8px 0' }}>Posts e Reels</h3>
-                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Posts que chamam atenção e fazem seu Instagram vender todos os dias.</p>
-                <a href="https://wa.me/5592984883080?text=Quero%20posts%20e%20reels%20pro%20meu%20Instagram" target="_blank" style={{ background: '#ec4899', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, display: 'inline-block' }}>Quero esse</a>
+                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Posts que chamam atenção e fazem seu insta vender todos os dias.</p>
+                <a href="https://wa.me/5592984883080?text=Quero%20posts%20e%20reels%20pro%20meu%20insta" target="_blank" style={{ background: '#ec4899', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, display: 'inline-block' }}>Quero esse</a>
               </div>
               <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 200, maxWidth: 300 }}>
                 <div style={{ fontSize: 32 }}>🎯</div>
                 <h3 style={{ margin: '8px 0' }}>Anúncios que vendem</h3>
-                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Anúncios no Instagram e Facebook pra atrair leads qualificados prontos pra comprar.</p>
+                <p style={{ color: '#e5e7eb', fontSize: 14 }}>Anúncios pra atrair leads qualificados prontos pra comprar.</p>
                 <a href="https://wa.me/5592984883080?text=Quero%20an%C3%BAncios%20que%20vendem" target="_blank" style={{ background: '#ec4899', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, display: 'inline-block' }}>Quero esse</a>
               </div>
               <div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 200, maxWidth: 300 }}>
@@ -738,6 +812,7 @@ export default function App() {
             </div>
           </div>
 
+          {/* QUERO CRESCER - formulario de lead, salva no banco e aparece pro admin */}
           <div style={{ background: '#2e303a', margin: '0 0 24px 0', padding: 24, borderRadius: 12, textAlign: 'center' }}>
             <h2 style={{ marginTop: 0 }}>Quero crescer 🚀</h2>
             <p style={{ color: '#e5e7eb' }}>Preenche aqui que a gente te chama no WhatsApp com um plano pra sua empresa.</p>
@@ -754,7 +829,7 @@ export default function App() {
                 <input placeholder="Seu WhatsApp - ex: (92) 99999-9999" value={whatsLead} onChange={(e) => setWhatsLead(formatarTelefone(e.target.value))} style={{ width: '100%', maxWidth: 400, marginBottom: 10 }} />
                 <br />
                 <select value={precisaLead} onChange={(e) => setPrecisaLead(e.target.value)} style={{ width: '100%', maxWidth: 400, padding: '10px 12px', borderRadius: 8, border: '1px solid #4b5563', background: '#1f2028', color: '#fff', fontWeight: 600, marginBottom: 12 }}>
-                  <option>Quero mais clientes no Instagram</option>
+                  <option>Quero mais clientes no insta</option>
                   <option>Quero anúncios que vendem</option>
                   <option>Quero logo e identidade visual</option>
                   <option>Quero tudo - gestão completa</option>
