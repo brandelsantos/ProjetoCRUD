@@ -33,13 +33,15 @@ CREATE TABLE IF NOT EXISTS compras (
 {*/ ainda falta dicionar produtos */}
 CREATE TABLE IF NOT EXISTS produtos (
   id SERIAL PRIMARY KEY,
-  item VARCHAR(100) NOT NULL,
-  quantidade INTEGER NOT NULL,
-  preco NUMERIC(10,2),
-  setor VARCHAR(50) DEFAULT 'produtos'
+  nome VARCHAR(100) NOT NULL,
+  preco DECIMAL(10,2) NOT NULL,
+  quantidade INT DEFAULT 0,
+  descricao TEXT,
+  setor VARCHAR(20) DEFAULT 'vendas',
+  criado_em TIMESTAMPTZ DEFAULT now()
 );
 
-{*/ Perfil de usuarios não adicionados */}
+{*/ Perfil de usuarios adicionados apenas para admin modificar info das páginas*/}
 CREATE TABLE IF NOT EXISTS perfil_usuario (
   id SERIAL PRIMARY KEY,
   pessoa_id INTEGER REFERENCES pessoas(id) ON DELETE CASCADE,
@@ -67,9 +69,22 @@ CREATE TABLE IF NOT EXISTS leads (
   criado_em TIMESTAMP DEFAULT NOW()
 );
 
+
+{*/ CASO NÃO TENHA A TABELA ELA É ADICIONADA NESSAS COLUNAS */}
+ALTER TABLE produtos ADD COLUMN IF NOT EXISTS quantidade INT DEFAULT0;
+ALTER TABLE produtos ADD COLUMN IF NOT EXISTS descricao TEXT ;
+ALTER TABLE produtos ADD COLUMN IF NOT EXISTS setor VARCHAR(20) DEFAULT 'vendas';
+ALTER TABLE produtos ADD COLUMN IF NOT EXISTS criado_em TIMESTAMPTZ DEFAULT now();
+
+
+{*/ CRIA O MATERIAL QUE VAI PREENCHER AS TABELAS */}
+
 INSERT INTO usuarios (usuario, senha, tipo) VALUES
 ('admin', '1234', 'admin'),
 ('compras', '1234', 'compras'),
 ('vendas', '1234', 'vendas'),
 ('marketing', '1234', 'marketing')
 ON CONFLICT (usuario) DO NOTHING;
+
+INSERT INTO produtos (nome, preco, quantidade, descricao, setor) VALUES
+  ('Tecpix', 299.90, 10, 'Câmera mais vendida do mercado!', 'vendas');
