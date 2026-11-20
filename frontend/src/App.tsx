@@ -68,9 +68,13 @@ export default function App() {
   const [filtroSetor, setFiltroSetor] = useState('todos')
   const [produtos, setProdutos] = useState<any[]>([]);
 
-  // ========== ESTADO META VENDAS - controla a meta do mês ==========
-  const [metaVendas, setMetaVendas] = useState(10000)
-  const [vendidoVendas, setVendidoVendas] = useState(6500)
+  // ========== META E VENDIDO  ==========
+const [metaVendas, setMetaVendas] = useState(10000)
+const [vendidoVendas, setVendidoVendas] = useState(0)
+const [novaMeta, setNovaMeta] = useState('')
+const [vendaProdutoId, setVendaProdutoId] = useState('')
+const [vendaQtd, setVendaQtd] = useState('1')
+const [ultimasVendas, setUltimasVendas] = useState<any[]>([])
 
   const [mostrarSobre, setMostrarSobre] = useState(false)
   const [nomeLead, setNomeLead] = useState('')
@@ -173,6 +177,19 @@ export default function App() {
     alert('Perfil salvo pelo admin!'); if (idPessoaLogada === idPessoaPerfilAdmin) carregarPerfil(idPessoaPerfilAdmin)
   }
   async function carregarAcessosPerfil() { try { const res = await fetch(`${API.replace('/pessoas', '')}/acessos-perfil`); const data = await res.json(); if (Array.isArray(data)) setAcessosPerfil(data) } catch { } }
+
+   // CARREGAR METAVENDAS 
+  async function carregarMetaVendas() {
+  const res = await fetch('http://localhost:3001/meta-vendas')
+  const data = await res.json()
+  setMetaVendas(Number(data.meta))
+  setVendidoVendas(Number(data.vendido))
+  const resV = await fetch('http://localhost:3001/vendas')
+  setUltimasVendas(await resV.json())
+}
+// Carrega a meta e as vendas assim que abre o app, e toda vez que trocar de aba
+useEffect(() => { carregarMetaVendas() }, [])
+useEffect(() => { carregarMetaVendas() }, [aba])
 
   const totalCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras').length
   const totalVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas').length
@@ -294,7 +311,7 @@ export default function App() {
             {editandoId === null ? <button onClick={cadastrar} style={{ background: '#22c55e', color: '#fff', padding: '10px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>Cadastrar</button> : <><button onClick={salvarEdicao} style={{ background: '#22c55e', color: '#fff', padding: '10px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>Salvar Edição</button><button onClick={cancelarEdicao} style={{ marginLeft: 8 }}>Cancelar</button></>}
           </div>
           <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginTop: 20 }}>
-            <h2 style={{ textAlign: 'center', marginTop: 0 }}>👤 Perfil da Pessoa - Só o Admin edita</h2>
+            <h2 style={{ textAlign: 'center', marginTop: 0 }}>👤 Perfil de Usuário</h2>
             <div style={{ textAlign: 'center' }}><label>Editar perfil de: </label><select value={idPessoaPerfilAdmin ?? ''} onChange={(e) => { const v = Number(e.target.value); if (v) carregarPerfilAdmin(v) }}><option value="">Escolhe a pessoa...</option>{pessoas.map(p => <option key={p.id} value={p.id}>{p.nome} - @{p.usuario}</option>)}</select></div>
             {idPessoaPerfilAdmin ? <div style={{ textAlign: 'center', marginTop: 14 }}><img src={fotoAdmin} alt="Foto" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} /><br /><br /><input placeholder="Link da foto" value={fotoAdmin} onChange={(e) => setFotoAdmin(e.target.value)} /><br /><input placeholder="Cargo" value={cargoAdmin} onChange={(e) => setCargoAdmin(e.target.value)} /><br /><input placeholder="Insta" value={instaAdmin} onChange={(e) => setInstaAdmin(e.target.value)} /><br /><input placeholder="WhatsApp" value={whatsAdmin} onChange={(e) => setWhatsAdmin(formatarTelefone(e.target.value))} /><br /><textarea placeholder="Bio" value={bioAdmin} onChange={(e) => setBioAdmin(e.target.value)} /><br /><button onClick={salvarPerfilAdmin} style={{ background: '#ec4899', color: '#fff', padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>Salvar Perfil</button></div> : <p style={{ textAlign: 'center', color: '#9ca3af' }}>Escolhe a pessoa aqui em cima.</p>}
           </div>
@@ -302,8 +319,7 @@ export default function App() {
           {mensagem && <p style={{ textAlign: 'center', background: mensagem.includes('sucesso') ? '#22c55e' : '#ef4444', padding: 10, borderRadius: 8 }}>{mensagem}</p>}
           <p style={{ textAlign: 'center' }}>Mostrando {pessoasDaPagina.length} de {pessoasFiltradas.length}</p>
           <div style={{ textAlign: 'center' }}><button onClick={() => setOrdenarPorNome(!ordenarPorNome)}>{ordenarPorNome ? 'Ordenado A-Z' : 'Ordenar A-Z'}</button><button onClick={limparTudo} style={{ marginLeft: 8, background: '#ef4444', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Limpar Tudo</button></div>
-          {carregando ? <p style={{ textAlign: 'center' }}>Carregando...</p> : <ul style={{ padding: 0 }}>{pessoasDaPagina.map((p) => (<li key={p.id} style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}><span>{p.nome} - {p.email} {p.usuario && <span> - @{p.usuario}</span>} <span style={{ background: corSetor(p.setor), padding: '2px 8px', borderRadius: 20, fontSize: 11 }}>{p.setor || 'admin'}</span></span><span><button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, marginRight: 6, cursor: 'pointer' }}>Editar</button><button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>Deletar</button></span></li>))}</ul>}
-          <div style={{ textAlign: 'center' }}><button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>Anterior</button><span> Pagina {pagina} de {totalPaginas} </span><button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas}>Proxima</button></div>
+        {carregando ? <p style={{ textAlign: 'center' }}>Carregando...</p> : <ul style={{ padding: 0 }}>{pessoasDaPagina.map((p) => (<li key={p.id} style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}><span>{p.nome} - {p.email} {p.usuario && <span> - @{p.usuario}</span>} <span style={{ background: corSetor(p.setor), padding: '2px 8px', borderRadius: 20, fontSize: 11 }}>{p.setor || 'admin'}</span></span><span><button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, marginRight: 6, cursor: 'pointer' }}>Editar</button><button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Deletar</button></span></li>))}</ul>}          <div style={{ textAlign: 'center' }}><button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>Anterior</button><span> Pagina {pagina} de {totalPaginas} </span><button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas}>Proxima</button></div>
         </div>
       )}
       {/* FIM DO ADMIN */}
@@ -365,21 +381,69 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* - META DO MÊS */}
-                <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #22c55e' }}>
-                  <h3 style={{ margin: '0 0 8px 0', textAlign: 'center' }}>🎯 Meta do mês</h3>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
-                    <label style={{ color: '#e5e7eb', fontSize: 13 }}>Meta R$ <input type="number" value={metaVendas} onChange={(e) => setMetaVendas(Number(e.target.value))} style={{ width: 100, padding: 6, borderRadius: 6, background: '#2e303a', color: '#fff', border: '1px solid #4b5563' }} /></label>
-                    <label style={{ color: '#e5e7eb', fontSize: 13 }}>Já vendi R$ <input type="number" value={vendidoVendas} onChange={(e) => setVendidoVendas(Number(e.target.value))} style={{ width: 100, padding: 6, borderRadius: 6, background: '#2e303a', color: '#fff', border: '1px solid #4b5563' }} /></label>
-                  </div>
-                  {/* BARRA DE PROGRESSO */}
-                  <div style={{ background: '#2e303a', height: 22, borderRadius: 20, overflow: 'hidden' }}>
-                    <div style={{ width: `${pctMeta}%`, background: pctMeta >= 100 ? '#22c55e' : '#f59e0b', height: '100%', textAlign: 'center', color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: '22px', transition: 'width 0.3s' }}>{pctMeta}%</div>
-                  </div>
-                  <p style={{ textAlign: 'center', margin: '8px 0 0 0', color: '#e5e7eb', fontSize: 13 }}>
-                    {pctMeta >= 100 ? '🎉 Meta batida! Parabéns!' : `Falta R$ ${faltaMeta.toFixed(2)} pra bater a meta de R$ ${metaVendas.toFixed(2)}!`}
-                  </p>
-                </div>
+                {/* LINHA 2 - META DO MÊS - ADMIN EDITA, VENDAS SÓ VÊ */}
+<div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #22c55e' }}>
+  <h3 style={{ margin: '0 0 8px 0', textAlign: 'center' }}>🎯 Meta do mês</h3>
+
+  {/* SE FOR ADMIN, MOSTRA OS CONTROLES */}
+  {tipoUsuario === 'admin' && (
+    <div style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+        <label style={{ color: '#e5e7eb', fontSize: 13 }}>Nova meta R$
+          <input type="number" value={novaMeta} onChange={(e) => setNovaMeta(e.target.value)} placeholder={String(metaVendas)} style={{ width: 100, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563', marginLeft: 4 }} />
+        </label>
+        <button onClick={async () => {
+          await fetch('http://localhost:3001/meta-vendas', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: Number(novaMeta), tipo: tipoUsuario }) })
+          setNovaMeta(''); carregarMetaVendas()
+        }} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Salvar meta</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <select value={vendaProdutoId} onChange={(e) => setVendaProdutoId(e.target.value)} style={{ padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff' }}>
+          <option value="">Escolhe o produto vendido...</option>
+          {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} - R$ {p.preco} ({p.quantidade} em estoque)</option>)}
+        </select>
+        <input type="number" value={vendaQtd} onChange={(e) => setVendaQtd(e.target.value)} min="1" style={{ width: 60, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563' }} />
+        <button onClick={async () => {
+          if (!vendaProdutoId) { alert('Escolhe o produto!'); return }
+          const res = await fetch('http://localhost:3001/vendas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto_id: Number(vendaProdutoId), quantidade: Number(vendaQtd), tipo: tipoUsuario }) })
+          const data = await res.json()
+          if (!res.ok) { alert(data.erro); return }
+          alert(`Venda registrada! R$ ${data.valorTotal}`); setVendaProdutoId(''); setVendaQtd('1'); carregarMetaVendas()
+          // Recarrega os produtos pra atualizar o estoque na tela
+          fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`).then(r => r.json()).then(d => setProdutos(d))
+        }} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Registrar venda</button>
+      </div>
+    </div>
+  )}
+
+  {/* BARRA DE PROGRESSO - TODO MUNDO VÊ IGUAL, ESPELHADO! */}
+  {(() => {
+    const faltaMeta = Math.max(0, metaVendas - vendidoVendas)
+    const pctMeta = metaVendas > 0 ? Math.min(100, Math.round((vendidoVendas / metaVendas) * 100)) : 0
+    return (<>
+      <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>Meta: <b>R$ {metaVendas.toFixed(2)}</b> | Já vendido: <b style={{ color: '#22c55e' }}>R$ {vendidoVendas.toFixed(2)}</b></p>
+      <div style={{ background: '#2e303a', height: 22, borderRadius: 20, overflow: 'hidden' }}>
+        <div style={{ width: `${pctMeta}%`, background: pctMeta >= 100 ? '#22c55e' : '#f59e0b', height: '100%', textAlign: 'center', color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: '22px' }}>{pctMeta}%</div>
+      </div>
+      <p style={{ textAlign: 'center', margin: '8px 0 0 0', color: '#e5e7eb', fontSize: 13 }}>
+        {pctMeta >= 100 ? '🎉 Meta batida! Parabéns!' : `Falta R$ ${faltaMeta.toFixed(2)} pra bater a meta!`}
+        {tipoUsuario === 'vendas' && <><br /><span style={{ color: '#9ca3af', fontSize: 12 }}>A meta e as vendas são definidas pelo admin, aqui é só visualização! 👀</span></>}
+      </p>
+    </>)
+  })()}
+
+  {/* ÚLTIMAS VENDAS */}
+  {ultimasVendas.length > 0 && (
+    <div style={{ marginTop: 12 }}>
+      <h4 style={{ textAlign: 'center' }}>🧾 Últimas vendas</h4>
+      <ul style={{ padding: 0 }}>{ultimasVendas.slice(0, 5).map(v => (
+        <li key={v.id} style={{ background: '#2e303a', padding: 8, borderRadius: 8, marginBottom: 6, listStyle: 'none', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+          <span>{v.quantidade}x {v.produto_nome}</span><span><b>R$ {Number(v.valor_total).toFixed(2)}</b> - {new Date(v.criado_em).toLocaleDateString('pt-BR')}</span>
+        </li>))}</ul>
+    </div>
+  )}
+</div>
 
                 {/*  - ALERTA ESTOQUE BAIXO */}
                 {quaseAcabando.length > 0 && (

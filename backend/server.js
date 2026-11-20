@@ -277,6 +277,58 @@ app.get('/acessos-perfil', async (req, res) => {
   }
 })
 
+// Pega a meta atual - todo mundo pode ver
+app.get('/meta-vendas', async (req, res) => {
+  const r = await pool.query('SELECT valor FROM meta_vendas WHERE id = 1');
+  const total = await pool.query('SELECT COALESCE(SUM(valor_total),0) as total FROM vendas_realizadas');
+  res.json({ meta: Number(r.rows[0]?.valor || 10000), vendido: Number(total.rows[0]?.total || 0) });
+});
+
+// Admin muda a meta
+app.put('/meta-vendas', async (req, res) => {
+  const { valor, tipo } = req.body;
+  if (tipo !== 'admin') return res.status(403).json({ erro: 'Só admin muda a meta!' });
+  await pool.query('UPDATE meta_vendas SET valor = $1, atualizado_em = NOW() WHERE id = 1', [valor]);
+  res.json({ ok: true });
+});
+
+
+// ========== REGISTRAR VENDA - SÓ ADMIN, COM QUEM VENDEU + O QUE VENDEU ==========
+app.post('/vendas', async (req, res) => {
+  const { produto_id, quantidade, vendedor_id, vendedor_nome, tipo } = req.body;
+  if (tipo !== 'admin') return res.status(403).json({ erro: 'Só admin registra venda!' });
+  if (!vendedor_id) return res.status(400).json({ erro: 'Escolhe quem vendeu!' });
+
+  try {
+    // 1. Acha o produto
+    const prod = await pool.query('SELECT * FROM produtos WHERE id = $1', [produto_id]);
+    if (prod.rows.length === 0) return res.status(404).json({ erro: 'Produto não achado!' });
+    if (prod.rows[0].quantidade < quantidade) return res.status(400).json({ erro: 'Estoque insuficiente!' });
+
+    const valorTotal = Number(prod.rows[0].preco) * Number(quantidade);
+
+    // 2. Diminui o estoque - AQUI DIMINUI!
+    await pool.query('UPDATE produtos SET quantidade = quantidade - $1 WHERE id = $2', [quantidade, produto_id]);
+
+    // 3. Registra a venda COM QUEM VENDEU
+    await pool.query(
+      'INSERT INTO vendas_realizadas (produto_id, produto_nome, quantidade, valor_total, vendedor_id, vendedor_nome) VALUES ($1,$2,$3,$4,$5,$6)',
+      [produto_id, prod.rows[0].nome, quantidade, valorTotal, vendedor_id, vendedor_nome]
+    );
+
+    res.json({ ok: true, valorTotal });
+  } catch (err) {
+    console.log('Erro ao registrar venda:', err);
+    res.status(500).json({ erro: 'Erro ao registrar venda no backend' });
+  }
+});
+
+// Lista as vendas - pra mostrar quem vendeu o que
+app.get('/vendas', async (req, res) => {
+  const r = await pool.query('SELECT * FROM vendas_realizadas ORDER BY criado_em DESC LIMIT 20');
+  res.json(r.rows);
+});
+
 // ========== POST /leads - SALVAR LEAD DO MARKETING - vem do Quero crescer ==========
 app.post('/leads', async (req, res) => {
   try {

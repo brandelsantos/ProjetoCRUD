@@ -70,6 +70,24 @@ CREATE TABLE IF NOT EXISTS leads (
   criado_em TIMESTAMP DEFAULT NOW()
 );
 
+ /* tabela com a meta do mês, e somente o admin edita o valor */
+CREATE TABLE IS NOT EXISTS meta_vendas (
+  id SERIAL PRIMARY KEY,
+  valor NUMERIC DEFAULT 10000,
+  atualizado_em TIMESTAMP DEFAULT NOW()
+);
+INSERT INTO meta_vendas (valor) VALUES (10000);
+
+/* Vendas que o admin registrar  */
+CREATE TABLE IF NOT EXISTS vendas_realizadas (
+  id SERIAL PRIMARY KEY,
+  produto_id INTEGER REFERENCES produtos(id),
+  produto_nome TEXT,
+  quantidade INTEGER,
+  valor_total NUMERIC,
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
 /*  docker exec -it starter_crud psql -U postgres -d crudstarter9 */
 /* SELECT id, nome, preco, quantidade, setor FROM produtos ORDER BY id; */
 /* CASO NÃO TENHA A TABELA ELA É ADICIONADA NESSAS COLUNAS */
