@@ -134,17 +134,30 @@ async function criarTabela() {
       )
     `);
       
-    // TABELA PRODUTOS - AINDA EM TESTE, backend pronto, tela ainda nao feita
+       // TABELA META_VENDAS - controla a meta do mês 
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS produtos (
-        id SERIAL PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL,
-        preco NUMERIC(10,2) NOT NULL DEFAULT 0,
-        quantidade INT NOT NULL DEFAULT 0,
-        descricao TEXT DEFAULT '',
-        setor VARCHAR(20) DEFAULT 'vendas',
-        criado_em TIMESTAMPTZ DEFAULT now()
+      CREATE TABLE IF NOT EXISTS meta_vendas (
+        id INT PRIMARY KEY DEFAULT 1,
+        valor NUMERIC(10,2) NOT NULL DEFAULT 10000,
+        atualizado_em TIMESTAMP DEFAULT NOW()
       )`);
+    await pool.query(`INSERT INTO meta_vendas (id, valor) VALUES (1, 10000) ON CONFLICT (id) DO NOTHING`);
+
+    // TABELA VENDAS_REALIZADAS - controla quem vendeu o que 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS vendas_realizadas (
+        id SERIAL PRIMARY KEY,
+        produto_id INT REFERENCES produtos(id) ON DELETE SET NULL,
+        produto_nome VARCHAR(100),
+        quantidade INT NOT NULL DEFAULT 1,
+        valor_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+        vendedor_id INTEGER,
+        vendedor_nome TEXT,
+        criado_em TIMESTAMP DEFAULT NOW()
+      )`);
+    // Garante as colunas do vendedor pra quem já tinha a tabela antiga
+    await pool.query(`ALTER TABLE vendas_realizadas ADD COLUMN IF NOT EXISTS vendedor_id INTEGER`);
+    await pool.query(`ALTER TABLE vendas_realizadas ADD COLUMN IF NOT EXISTS vendedor_nome TEXT`);
     
     // ALTER TABLE - controla as colunas novas pra quem ja tinha a tabela antiga
     await pool.query(`ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)`);
@@ -295,6 +308,7 @@ app.put('/meta-vendas', async (req, res) => {
 
 // ========== REGISTRAR VENDA - SÓ ADMIN, COM QUEM VENDEU + O QUE VENDEU ==========
 app.post('/vendas', async (req, res) => {
+  console.log('CHEGOU NO BACKEND:', req.body);
   const { produto_id, quantidade, vendedor_id, vendedor_nome, tipo } = req.body;
   if (tipo !== 'admin') return res.status(403).json({ erro: 'Só admin registra venda!' });
   if (!vendedor_id) return res.status(400).json({ erro: 'Escolhe quem vendeu!' });
@@ -323,7 +337,7 @@ app.post('/vendas', async (req, res) => {
   }
 });
 
-// Lista as vendas - pra mostrar quem vendeu o que
+// Lista as vendas - pra mostrar quem vendeu o quem vendeu
 app.get('/vendas', async (req, res) => {
   const r = await pool.query('SELECT * FROM vendas_realizadas ORDER BY criado_em DESC LIMIT 20');
   res.json(r.rows);

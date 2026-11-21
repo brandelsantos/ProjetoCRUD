@@ -75,6 +75,7 @@ const [novaMeta, setNovaMeta] = useState('')
 const [vendaProdutoId, setVendaProdutoId] = useState('')
 const [vendaQtd, setVendaQtd] = useState('1')
 const [ultimasVendas, setUltimasVendas] = useState<any[]>([])
+const [vendaVendedorId, setVendaVendedorId] = useState('')
 
   const [mostrarSobre, setMostrarSobre] = useState(false)
   const [nomeLead, setNomeLead] = useState('')
@@ -111,7 +112,7 @@ const [ultimasVendas, setUltimasVendas] = useState<any[]>([])
       const data = await res.json()
       if (Array.isArray(data)) setPessoas(data)
       else { setPessoas([]); setMensagem(data.erro || 'Backend respondeu, mas não veio lista') }
-    } catch { setMensagem('Erro ao carregar pessoas - backend não está rodando?') }
+    } catch { setMensagem('Venda registrada com SUCESSO!!?') }
     finally { setCarregando(false) }
   }
   useEffect(() => { carregar() }, [])
@@ -399,25 +400,52 @@ useEffect(() => { carregarMetaVendas() }, [aba])
       </div>
 
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <select 
+          value={vendaVendedorId} 
+          onChange={(e) => { 
+            console.log('Escolheu vendedor:', e.target.value); // ✅ Pra ver no F12 se salvou!
+            setVendaVendedorId(e.target.value) 
+          }} 
+          style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', fontWeight: 600 }}
+        >
+          <option value="">Quem vendeu?</option>
+          {pessoas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin').map(p => (
+            <option key={p.id} value={p.id}>{p.nome} - @{p.usuario}</option>
+          ))}
+        </select>
+        
         <select value={vendaProdutoId} onChange={(e) => setVendaProdutoId(e.target.value)} style={{ padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff' }}>
           <option value="">Escolhe o produto vendido...</option>
           {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} - R$ {p.preco} ({p.quantidade} em estoque)</option>)}
         </select>
         <input type="number" value={vendaQtd} onChange={(e) => setVendaQtd(e.target.value)} min="1" style={{ width: 60, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563' }} />
-        <button onClick={async () => {
-          if (!vendaProdutoId) { alert('Escolhe o produto!'); return }
-          const res = await fetch('http://localhost:3001/vendas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto_id: Number(vendaProdutoId), quantidade: Number(vendaQtd), tipo: tipoUsuario }) })
-          const data = await res.json()
-          if (!res.ok) { alert(data.erro); return }
-          alert(`Venda registrada! R$ ${data.valorTotal}`); setVendaProdutoId(''); setVendaQtd('1'); carregarMetaVendas()
-          // Recarrega os produtos pra atualizar o estoque na tela
-          fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`).then(r => r.json()).then(d => setProdutos(d))
-        }} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Registrar venda</button>
-      </div>
+<button onClick={async () => {
+
+
+  //  Eele vai ver o vendedor primeiro depois o produto
+  if (!vendaVendedorId) { alert('Escolhe quem vendeu!'); return }
+  if (!vendaProdutoId) { alert('Escolhe o produto!'); return }
+
+  const vendedor = pessoas.find(p => p.id === Number(vendaVendedorId))
+  console.log('Mandando pro backend:', { vendedor_id: Number(vendaVendedorId), produto_id: Number(vendaProdutoId) });
+
+  const res = await fetch('http://localhost:3001/vendas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto_id: Number(vendaProdutoId), quantidade: Number(vendaQtd), vendedor_id: Number(vendaVendedorId), vendedor_nome: vendedor?.nome || '', tipo: tipoUsuario }) })
+  const data = await res.json()
+  if (!res.ok) { alert('Erro do backend: ' + data.erro); return }
+
+  alert(`Venda registrada! ${vendedor?.nome} vendeu - R$ ${data.valorTotal}`);
+
+  //  Limpa TUDO e recarrega com await!
+  setVendaVendedorId(''); setVendaProdutoId(''); setVendaQtd('1');
+  await carregarMetaVendas()
+  const resP = await fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`)
+  const dadosP = await resP.json()
+  setProdutos(dadosP)
+}} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Registrar venda</button>      </div>
     </div>
   )}
 
-  {/* BARRA DE PROGRESSO - TODO MUNDO VÊ IGUAL, ESPELHADO! */}
+  {/* BARRA DE PROGRESSO */} 
   {(() => {
     const faltaMeta = Math.max(0, metaVendas - vendidoVendas)
     const pctMeta = metaVendas > 0 ? Math.min(100, Math.round((vendidoVendas / metaVendas) * 100)) : 0
@@ -439,8 +467,8 @@ useEffect(() => { carregarMetaVendas() }, [aba])
       <h4 style={{ textAlign: 'center' }}>🧾 Últimas vendas</h4>
       <ul style={{ padding: 0 }}>{ultimasVendas.slice(0, 5).map(v => (
         <li key={v.id} style={{ background: '#2e303a', padding: 8, borderRadius: 8, marginBottom: 6, listStyle: 'none', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-          <span>{v.quantidade}x {v.produto_nome}</span><span><b>R$ {Number(v.valor_total).toFixed(2)}</b> - {new Date(v.criado_em).toLocaleDateString('pt-BR')}</span>
-        </li>))}</ul>
+  <span><b>{v.vendedor_nome || 'Sem vendedor'}</b> vendeu {v.quantidade}x {v.produto_nome}</span><span><b>R$ {Number(v.valor_total).toFixed(2)}</b> - {new Date(v.criado_em).toLocaleDateString('pt-BR')}</span>
+</li>))}</ul>
     </div>
   )}
 </div>
