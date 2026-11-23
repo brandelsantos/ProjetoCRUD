@@ -1,5 +1,4 @@
 // ========== IMPORTS - controla as ferramentas que o backend usa ==========
-// dotenv = le o backend/.env | express = cria o servidor | cors = deixa o frontend falar com o backend | Pool = fala com o Postgres
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -223,7 +222,7 @@ app.post('/login', async (req, res) => {
       return res.json({ tipo: result.rows[0].tipo, nome: result.rows[0].nome || result.rows[0].usuario })
     }
 
-    // 2 - olha na tabela pessoas (os cadastrados) - AQUI TEM O id
+    // 2 - olha na tabela pessoas (os cadastrados)
     result = await pool.query(
       'SELECT id, nome, setor AS tipo, usuario FROM pessoas WHERE usuario = $1 AND senha = $2',
       [usuario, senha]
@@ -232,7 +231,7 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ erro: 'Usuário ou senha errados!' })
     }
 
-    // AQUI É O res.json COM id - o frontend usa esse id pra cair no Meu Perfil
+    // AQUI É O res.json COM id
     return res.json({ tipo: result.rows[0].tipo, nome: result.rows[0].nome, id: result.rows[0].id })
   } catch (err) {
     console.error('Erro no login:', err.message)
@@ -240,7 +239,7 @@ app.post('/login', async (req, res) => {
   }
 })
 
-// ========== GET /perfil/:pessoa_id - BUSCAR PERFIL DE UMA PESSOA - so mostra, nao edita ==========
+// ==========  BUSCAR PERFIL DE UMA PESSOA - so mostra, nao edita ==========
 app.get('/perfil/:pessoa_id', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM perfil_usuario WHERE pessoa_id = $1', [req.params.pessoa_id])
@@ -251,8 +250,7 @@ app.get('/perfil/:pessoa_id', async (req, res) => {
 })
 
 // ========== POST /perfil - SALVAR / EDITAR PERFIL - UNICO, TRAVADO SO ADMIN ==========
-// ATENCAO: antes tinha 2x esse bloco, o segundo apagava a trava. Agora tem so 1.
-app.post('/perfil', async (req, res) => {
+  app.post('/perfil', async (req, res) => {
   try {
     // TRAVA: só admin pode salvar perfil
     if (req.body.tipo !== 'admin') {
@@ -373,7 +371,7 @@ app.get('/leads', async (req, res) => {
   }
 })
 
-// ========== DELETE /leads/:id - APAGAR LEAD - botao Ja atendi ==========
+// ========== DELETE /leads/id - APAGAR LEAD - botao Ja atendi ==========
 app.delete('/leads/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM leads WHERE id = $1', [req.params.id])
@@ -383,7 +381,7 @@ app.delete('/leads/:id', async (req, res) => {
   }
 })
 
-// ========== GET /pessoas/:id - Buscar 1 pessoa por id ==========
+// ========== GET /pessoas/id - Buscar 1 pessoa por id ==========
 app.get('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -423,7 +421,7 @@ app.post('/pessoas', async (req, res) => {
   }
 });
 
-// ========== PUT /pessoas/:id - Editar pessoa ==========
+// ========== PUT /pessoas/id - Editar pessoa ==========
 app.put('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -456,7 +454,7 @@ app.put('/pessoas/:id', async (req, res) => {
   }
 });
 
-// ========== DELETE /pessoas/:id - Deletar pessoa ==========
+// ========== DELETE /pessoas/id - Deletar pessoa ==========
 app.delete('/pessoas/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);

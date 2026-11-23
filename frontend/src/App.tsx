@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 // ============================================================
-// 0 - TIPOS - O QUE CADA TABELA TEM
+// TIPOS - O QUE CADA TABELA TEM
 // ============================================================
 type Pessoa = { id: number; nome: string; email: string; telefone?: string | null; idade?: number | null; setor?: string | null; usuario?: string | null; senha?: string | null }
 type Lead = { id: number; nome: string; whatsapp: string; precisa: string; criado_em?: string }
@@ -338,7 +338,7 @@ useEffect(() => { carregarMetaVendas() }, [aba])
       {/* COMPRAS - so a lista */}
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
 
-            {/* ========== 6.6 DASHBOARD VENDAS + TABELA DE PRODUTOS ========== */}
+            {/* ========== DASHBOARD VENDAS + TABELA DE PRODUTOS ========== */}
       {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && aba === 'vendas' && (
         <div>
           {/* TITULO */}
@@ -358,7 +358,7 @@ useEffect(() => { carregarMetaVendas() }, [aba])
 
             return (
               <>
-                {/* - 4 CARDS */}
+                {/* - CARDS */}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                   <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #22c55e' }}>
                     <div style={{ fontSize: 26 }}>💰</div>
@@ -382,7 +382,7 @@ useEffect(() => { carregarMetaVendas() }, [aba])
                   </div>
                 </div>
 
-                {/* LINHA 2 - META DO MÊS - ADMIN EDITA, VENDAS SÓ VÊ */}
+                {/* META DO MÊS - ADMIN EDITA, VENDAS SÓ VÊ */}
 <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #22c55e' }}>
   <h3 style={{ margin: '0 0 8px 0', textAlign: 'center' }}>🎯 Meta do mês</h3>
 
