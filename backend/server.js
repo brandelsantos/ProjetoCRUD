@@ -483,9 +483,20 @@ app.post('/produtos', async (req, res) => {
     if (!nome || !nome.trim()) {
       return res.status(400).json({ erro: 'Nome do produto é obrigatório' });
     }
+
+    // Dessa forma ela começa a contar a partir do maior número
+
+    const livre = await pool.query(`
+      SELECT COALESCE(MIN(s.id), (SELECT COALESCE(MAX(id), 0) + 1 FROM produtos)) AS proximo_id
+      FROM generate_series(1, (SELECT COALESCE(MAX(id), 0) + 1 FROM produtos)) s(id)
+      WHERE NOT EXISTS (SELECT 1 FROM produtos WHERE id = s.id)
+`);
+    const proximoId = livre.rows[0].proximo_id;
+    console.log('Próximo id livre vai ser:', proximoId);
+
     const result = await pool.query(
-      'INSERT INTO produtos (nome, preco, quantidade, descricao, setor) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [nome.trim(), preco || 0, quantidade || 0, descricao || '', setor || 'vendas']
+      'INSERT INTO produtos (id, nome, preco, quantidade, descricao, setor) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [proximoId, nome.trim(), preco || 0, quantidade || 0, descricao || '', setor || 'vendas']
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -503,6 +514,8 @@ app.delete('/produtos/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ erro: 'Produto não encontrado' });
     }
+
+    await pool.query("SELECT setval('produtos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM produtos))");
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
