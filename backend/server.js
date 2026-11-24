@@ -477,19 +477,21 @@ app.delete('/pessoas/:id', async (req, res) => {
 
 // ========== PRODUTOS - Cadastrar ==========
 app.post('/produtos', async (req, res) => {
+  console.log('CHEGOU CADASTRAR PRODUTO', req.body);
   try {
-    const { nome, preco, quantidade, setor } = req.body;
+    const { nome, preco, quantidade, descricao, setor } = req.body;
     if (!nome || !nome.trim()) {
       return res.status(400).json({ erro: 'Nome do produto é obrigatório' });
     }
     const result = await pool.query(
-      'INSERT INTO produtos (nome, preco, quantidade, setor) VALUES ($1, $2, $3, $4) RETURNING *',
-      [nome.trim(), preco || 0, quantidade || 0, setor || 'admin']
+      'INSERT INTO produtos (nome, preco, quantidade, descricao, setor) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [nome.trim(), preco || 0, quantidade || 0, descricao || '', setor || 'vendas']
     );
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ erro: 'Erro no banco' });
+    console.log('ERRO DE VERDADE NO BANCO', req.message);
+    res.status(500).json({ erro: 'Erro no banco' + err.message});
   }
 });
 

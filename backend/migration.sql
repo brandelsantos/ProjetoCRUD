@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS produtos (
   nome VARCHAR(100) NOT NULL,
   preco DECIMAL(10,2) NOT NULL,
   quantidade INT DEFAULT 0,
-  descricao TEXT,
+  descricao TEXT DEFAULT '',
   setor VARCHAR(20) DEFAULT 'vendas',
   criado_em TIMESTAMPTZ DEFAULT now()
 );
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS vendas_realizadas (
 /* CASO NÃO TENHA A TABELA ELA É ADICIONADA NESSAS COLUNAS */
 SELECT column_name FROM information_schema.columns WHERE table_name = 'produtos';
 ALTER TABLE produtos ADD COLUMN IF NOT EXISTS quantidade INT DEFAULT 0;
-ALTER TABLE produtos ADD COLUMN IF NOT EXISTS descricao TEXT ;
+ALTER TABLE produtos ADD COLUMN IF NOT EXISTS descricao TEXT DEFAULT '';
 ALTER TABLE produtos ADD COLUMN IF NOT EXISTS setor VARCHAR(20) DEFAULT 'vendas';
 ALTER TABLE produtos ADD COLUMN IF NOT EXISTS criado_em TIMESTAMPTZ DEFAULT now();
 

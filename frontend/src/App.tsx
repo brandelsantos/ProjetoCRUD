@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import { preconnect } from 'react-dom';
 
 // ============================================================
 // TIPOS - O QUE CADA TABELA TEM
@@ -76,6 +77,13 @@ const [vendaProdutoId, setVendaProdutoId] = useState('')
 const [vendaQtd, setVendaQtd] = useState('1')
 const [ultimasVendas, setUltimasVendas] = useState<any[]>([])
 const [vendaVendedorId, setVendaVendedorId] = useState('')
+
+  // ========== CADASTRO DE PRODUTOS ========
+
+const [novoProdutoNome, setNovoProdutoNome] = useState('')
+const [novoProdutoPreco, setNovoProdutoPreco] = useState('')
+const [novoProdutoQtd, setNovoProdutoQtd] = useState ('')
+const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
 
   const [mostrarSobre, setMostrarSobre] = useState(false)
   const [nomeLead, setNomeLead] = useState('')
@@ -484,6 +492,52 @@ useEffect(() => { carregarMetaVendas() }, [aba])
               </>
             )
           })()}
+
+          {/* =====CADASTRAR PRODUTO NOVO ====*/}
+          {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (
+            <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #3b82f6' }}>
+            <h3 style={{ margin: '0 0 10px 0', textAlign: 'center' }}> Cadastrar Produto Novo</h3>
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <input placeholder="Nome do produto" value={novoProdutoNome} onChange={(e) => setNovoProdutoNome(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563', minWidth: 200}} />
+              <input placeholder="Preço" value={novoProdutoPreco} onChange={(e) => setNovoProdutoPreco(e.target.value)} style={{ width: 110, padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563'}} />
+              <input placeholder="Qtd" value={novoProdutoQtd} onChange={(e) => setNovoProdutoQtd(e.target.value)} style={{ width: 70, padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563'}} />
+              <input placeholder="Descrição" value={novoProdutoDescricao} onChange={(e) => setNovoProdutoDescricao(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563', minWidth: 100}} />
+            
+            <button onClick ={async () => {
+              if (!novoProdutoNome.trim()) { alert('Coloca o nome do produto!'); return}
+              if (!novoProdutoPreco.trim()) { alert('Coloca o preço!'); return}
+              if (!novoProdutoQtd.trim()) { alert('Coloca a quantidade'); return}
+
+            const res = await fetch('http://localhost:3001/produtos', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                nome: novoProdutoNome.trim(),
+                preco: Number(novoProdutoPreco),
+                quantidade: Number(novoProdutoQtd),
+                descricao: novoProdutoDescricao.trim(),
+                setor: 'vendas',
+                tipo: tipoUsuario
+              })
+            })
+          const data = await res.json()
+          console.log('Resposta do backend', data);
+          if (!res.ok) {alert('Erro: ' + data.erro); return}
+
+            alert(`{Produto ${data.nome} cadastrado!`)
+            setNovoProdutoNome(''); setNovoProdutoPreco(''); setNovoProdutoQtd(''); setNovoProdutoDescricao('')
+
+          const resP = await fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`)
+          const dadosP = await resP.json()
+          setProdutos(dadosP)
+        }} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
+          Cadastrar produto
+        </button>
+      </div>
+    </div>
+  )}
+
 
           {/* ===== TABELA DE PRODUTOS - */}
           <h3>Controle de Produtos - Time de Vendas</h3>
