@@ -506,8 +506,14 @@ app.post('/produtos', async (req, res) => {
   }
 });
 
+
+
 // ========== PRODUTOS - Deletar ==========
 app.delete('/produtos/:id', async (req, res) => {
+  const tipo = req.query.tipo;
+  if (tipo !== 'admin') {
+    return res.status(403).json({ erro: 'Só o admin pode excluir produtos!' });
+  }
   try {
     const id = Number(req.params.id);
     const result = await pool.query('DELETE FROM produtos WHERE id = $1 RETURNING *', [id]);
@@ -520,6 +526,40 @@ app.delete('/produtos/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro no banco' });
+  }
+});
+
+//  EDITAR - SÓ ADMIN!
+app.put('/produtos/:id', async (req, res) => {
+  const tipo = req.query.tipo;
+  if (tipo !== 'admin') {
+    return res.status(403).json({ erro: 'Só o admin pode editar produtos!' });
+  }
+  try {
+    const { id } = req.params;
+    const { nome, preco, quantidade, descricao } = req.body;
+    const result = await pool.query(
+      'UPDATE produtos SET nome = $1, preco = $2, quantidade = $3, descricao = $4 WHERE id = $5 RETURNING *',
+      [nome, preco, quantidade, descricao || '', id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+//  EXCLUIR - SÓ ADMIN!
+app.delete('/produtos/:id', async (req, res) => {
+  const tipo = req.query.tipo;
+  if (tipo !== 'admin') {
+    return res.status(403).json({ erro: 'Só o admin pode excluir produtos!' });
+  }
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM produtos WHERE id = $1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
   }
 });
 

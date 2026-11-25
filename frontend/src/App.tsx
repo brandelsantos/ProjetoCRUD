@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { preconnect } from 'react-dom';
 
-// ============================================================
-// TIPOS - O QUE CADA TABELA TEM
-// ============================================================
 type Pessoa = { id: number; nome: string; email: string; telefone?: string | null; idade?: number | null; setor?: string | null; usuario?: string | null; senha?: string | null }
 type Lead = { id: number; nome: string; whatsapp: string; precisa: string; criado_em?: string }
 type Perfil = { id?: number; pessoa_id: number; foto: string; bio: string; cargo: string; instagram: string; whatsapp: string }
@@ -39,10 +35,6 @@ function corSetor(setor?: string | null) {
 }
 
 export default function App() {
-  // ============================================================
-  // ESTADOS
-  // aba = ONDE voce esta | tipoUsuario = QUEM voce e
-  // ============================================================
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [nomeEdit, setNomeEdit] = useState('')
   const [emailEdit, setEmailEdit] = useState('')
@@ -58,8 +50,6 @@ export default function App() {
   const [busca, setBusca] = useState('')
   const [ordenarPorNome, setOrdenarPorNome] = useState(false)
   const [pagina, setPagina] = useState(1)
-
-  // ABA pode ser: login, perfil, perfil-compras, compras, anuncio, anuncio-marketing, anuncio-compras, anuncio-vendas, vendas, admin, perfil-vendas, perfil-marketing
   const [aba, setAba] = useState<string>('login')
   const [logadoNova, setLogadoNova] = useState(false)
   const [usuario, setUsuario] = useState('')
@@ -67,24 +57,18 @@ export default function App() {
   const [tipoUsuario, setTipoUsuario] = useState('')
   const [nomeLogado, setNomeLogado] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('todos')
-  const [produtos, setProdutos] = useState<any[]>([]);
-
-  // ========== META E VENDIDO  ==========
-const [metaVendas, setMetaVendas] = useState(10000)
-const [vendidoVendas, setVendidoVendas] = useState(0)
-const [novaMeta, setNovaMeta] = useState('')
-const [vendaProdutoId, setVendaProdutoId] = useState('')
-const [vendaQtd, setVendaQtd] = useState('1')
-const [ultimasVendas, setUltimasVendas] = useState<any[]>([])
-const [vendaVendedorId, setVendaVendedorId] = useState('')
-
-  // ========== CADASTRO DE PRODUTOS ========
-
-const [novoProdutoNome, setNovoProdutoNome] = useState('')
-const [novoProdutoPreco, setNovoProdutoPreco] = useState('')
-const [novoProdutoQtd, setNovoProdutoQtd] = useState ('')
-const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
-
+  const [produtos, setProdutos] = useState<any[]>([])
+  const [metaVendas, setMetaVendas] = useState(10000)
+  const [vendidoVendas, setVendidoVendas] = useState(0)
+  const [novaMeta, setNovaMeta] = useState('')
+  const [vendaProdutoId, setVendaProdutoId] = useState('')
+  const [vendaQtd, setVendaQtd] = useState('1')
+  const [ultimasVendas, setUltimasVendas] = useState<any[]>([])
+  const [vendaVendedorId, setVendaVendedorId] = useState('')
+  const [novoProdutoNome, setNovoProdutoNome] = useState('')
+  const [novoProdutoPreco, setNovoProdutoPreco] = useState('')
+  const [novoProdutoQtd, setNovoProdutoQtd] = useState('')
+  const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
   const [mostrarSobre, setMostrarSobre] = useState(false)
   const [nomeLead, setNomeLead] = useState('')
   const [whatsLead, setWhatsLead] = useState('')
@@ -92,7 +76,6 @@ const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
   const [enviadoLead, setEnviadoLead] = useState(false)
   const [leads, setLeads] = useState<Lead[]>([])
   const [enviandoLead, setEnviandoLead] = useState(false)
-
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [fotoPerfil, setFotoPerfil] = useState('/desenho.webp')
   const [bioPerfil, setBioPerfil] = useState('')
@@ -101,7 +84,6 @@ const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
   const [whatsPerfil, setWhatsPerfil] = useState('')
   const [idPessoaLogada, setIdPessoaLogada] = useState<number | null>(null)
   const [acessosPerfil, setAcessosPerfil] = useState<any[]>([])
-
   const [idPessoaPerfilAdmin, setIdPessoaPerfilAdmin] = useState<number | null>(null)
   const [fotoAdmin, setFotoAdmin] = useState('/desenho.webp')
   const [bioAdmin, setBioAdmin] = useState('')
@@ -109,10 +91,6 @@ const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
   const [instaAdmin, setInstaAdmin] = useState('')
   const [whatsAdmin, setWhatsAdmin] = useState('')
 
-  // ============================================================
-  //                 FUNCOES DO BACKEND
-  // carregar, cadastrar, editar, deletar, leads, perfil
-  // ============================================================
   async function carregar() {
     try {
       setCarregando(true)
@@ -120,7 +98,7 @@ const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
       const data = await res.json()
       if (Array.isArray(data)) setPessoas(data)
       else { setPessoas([]); setMensagem(data.erro || 'Backend respondeu, mas não veio lista') }
-    } catch { setMensagem('Venda registrada com SUCESSO!!?') }
+    } catch { setMensagem('Erro ao conectar no backend') }
     finally { setCarregando(false) }
   }
   useEffect(() => { carregar() }, [])
@@ -169,6 +147,53 @@ const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
   }
   function cancelarEdicao() { setEditandoId(null); setNomeEdit(''); setEmailEdit(''); setTelefoneEdit(''); setIdadeEdit(''); setSetorEdit('admin'); setUsuarioEdit(''); setSenhaEdit('') }
   function sair() { setLogadoNova(false); setUsuario(''); setSenha(''); setTipoUsuario(''); setNomeLogado(''); setAba('login'); setIdPessoaLogada(null); setPerfil(null); setFotoPerfil('/desenho.webp'); setBioPerfil(''); setCargoPerfil(''); setInstaPerfil(''); setWhatsPerfil(''); setIdPessoaPerfilAdmin(null) }
+
+  // ===== FUNCOES DE PRODUTOS - SO ADMIN EDITA / EXCLUI =====
+  async function carregarProdutos() {
+    const res = await fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`)
+    const dados = await res.json()
+    if (Array.isArray(dados)) setProdutos(dados)
+  }
+  async function cadastrarProduto() {
+    if (!novoProdutoNome.trim()) { alert('Coloca o nome do produto!'); return }
+    if (!novoProdutoPreco.trim()) { alert('Coloca o preço!'); return }
+    if (!novoProdutoQtd.trim()) { alert('Coloca a quantidade'); return }
+    try {
+      const res = await fetch('http://localhost:3001/produtos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: novoProdutoNome.trim(), preco: Number(novoProdutoPreco), quantidade: Number(novoProdutoQtd), descricao: novoProdutoDescricao.trim(), setor: 'vendas', tipo: tipoUsuario })
+      })
+      const data = await res.json()
+      if (!res.ok) { alert(data.erro || 'Erro ao cadastrar produto'); return }
+      alert('Produto cadastrado com sucesso!')
+      setNovoProdutoNome(''); setNovoProdutoPreco(''); setNovoProdutoQtd(''); setNovoProdutoDescricao('')
+      carregarProdutos()
+    } catch { alert('Erro ao conectar no backend') }
+  }
+  async function excluirProduto(id: number) {
+    if (tipoUsuario !== 'admin') { alert('Só o admin pode excluir!'); return }
+    if (!confirm('Tem certeza que quer excluir este produto?')) return
+    await fetch(`http://localhost:3001/produtos/${id}?tipo=${tipoUsuario}`, { method: 'DELETE' })
+    carregarProdutos()
+  }
+  async function editarProduto(prod: any) {
+    if (tipoUsuario !== 'admin') { alert('Só o admin pode editar!'); return }
+    const novoNome = prompt('Novo nome:', prod.nome)
+    if (novoNome === null) return
+    const novoPreco = prompt('Novo preço:', String(prod.preco))
+    if (novoPreco === null) return
+    const novaQtd = prompt('Nova quantidade:', String(prod.quantidade))
+    if (novaQtd === null) return
+    const novaDescricao = prompt('Nova descrição:', prod.descricao || '')
+    await fetch(`http://localhost:3001/produtos/${prod.id}?tipo=${tipoUsuario}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: novoNome, preco: Number(novoPreco), quantidade: Number(novaQtd), descricao: novaDescricao || '' })
+    })
+    carregarProdutos()
+  }
+
   async function carregarLeads() { try { const res = await fetch(`${API.replace('/pessoas', '')}/leads`); const data = await res.json(); if (Array.isArray(data)) setLeads(data) } catch { } }
   async function apagarLead(id: number, nomeLeadApagar: string) { if (!confirm(`Já atendeu ${nomeLeadApagar}? Apagar da lista?`)) return; await fetch(`${API.replace('/pessoas', '')}/leads/${id}`, { method: 'DELETE' }); carregarLeads() }
   async function carregarPerfil(pessoaId: number) {
@@ -186,24 +211,20 @@ const [novoProdutoDescricao, setNovoProdutoDescricao] = useState('')
     alert('Perfil salvo pelo admin!'); if (idPessoaLogada === idPessoaPerfilAdmin) carregarPerfil(idPessoaPerfilAdmin)
   }
   async function carregarAcessosPerfil() { try { const res = await fetch(`${API.replace('/pessoas', '')}/acessos-perfil`); const data = await res.json(); if (Array.isArray(data)) setAcessosPerfil(data) } catch { } }
-
-   // CARREGAR METAVENDAS 
   async function carregarMetaVendas() {
-  const res = await fetch('http://localhost:3001/meta-vendas')
-  const data = await res.json()
-  setMetaVendas(Number(data.meta))
-  setVendidoVendas(Number(data.vendido))
-  const resV = await fetch('http://localhost:3001/vendas')
-  setUltimasVendas(await resV.json())
-}
-// Carrega a meta e as vendas assim que abre o app, e toda vez que trocar de aba
-useEffect(() => { carregarMetaVendas() }, [])
-useEffect(() => { carregarMetaVendas() }, [aba])
+    const res = await fetch('http://localhost:3001/meta-vendas')
+    const data = await res.json()
+    setMetaVendas(Number(data.meta))
+    setVendidoVendas(Number(data.vendido))
+    const resV = await fetch('http://localhost:3001/vendas')
+    setUltimasVendas(await resV.json())
+  }
+  useEffect(() => { carregarMetaVendas() }, [])
+  useEffect(() => { carregarMetaVendas() }, [aba])
 
   const totalCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras').length
   const totalVendas = pessoas.filter(p => (p.setor || 'admin') === 'vendas').length
   const totalMarketing = pessoas.filter(p => (p.setor || 'admin') === 'marketing').length
-  const totalAdmin = pessoas.filter(p => (p.setor || 'admin') === 'admin').length
   const pessoasFiltradas = pessoas.filter((p) => { const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase()) || (p.usuario || '').toLowerCase().includes(busca.toLowerCase()); const bateSetor = filtroSetor === 'todos' || (p.setor || 'admin') === filtroSetor; return bateBusca && bateSetor }).sort((a, b) => { if (!ordenarPorNome) return 0; return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase()) })
   const pessoasCompras = pessoas.filter(p => (p.setor || 'admin') === 'compras' || (p.setor || 'admin') === 'admin')
   const porPagina = 5
@@ -221,9 +242,6 @@ useEffect(() => { carregarMetaVendas() }, [aba])
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 20 }}>
-      {/* ============================================================
-                  CABECALHO - some nas telas de Perfil e Anuncio
-          ============================================================ */}
       {aba !== 'anuncio' && aba !== 'anuncio-marketing' && aba !== 'anuncio-compras' && aba !== 'anuncio-vendas' && aba !== 'perfil' && aba !== 'perfil-compras' && aba !== 'perfil-marketing' && aba !== 'perfil-vendas' && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <img src="/desenho.webp" alt="Meu desenho" className="foto-desenho" />
@@ -232,37 +250,23 @@ useEffect(() => { carregarMetaVendas() }, [aba])
           {logadoNova && <p style={{ color: '#22c55e', fontWeight: 700 }}>Logado como: {nomeLogado} ({tipoUsuario})</p>}
         </div>
       )}
-
-      {/* ============================================================
-                              BOTOES DE NAVEGACAO
-          Regra: tipoUsuario = QUEM pode ver | setAba = PRA ONDE vai
-          ============================================================ */}
       {logadoNova && (
         <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: (aba === 'anuncio' || aba === 'perfil' || aba === 'perfil-compras' || aba === 'perfil-vendas' || aba === 'perfil-marketing') ? 16 : 0 }}>
-          {/* MEU PERFIL - so admin*/}
           {idPessoaLogada && tipoUsuario !== 'marketing' && tipoUsuario !== 'compras' && tipoUsuario !== 'vendas' && (
             <button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil') }} style={{ marginRight: 8, background: aba === 'perfil' ? '#0f766e' : '#14b8a6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>👤 Meu Perfil</button>
           )}
-          {/* COMPRAS - 3 abas */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (<button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-compras') }} style={{ marginRight: 8, background: aba === 'perfil-compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Compras</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (<button onClick={() => setAba('compras')} style={{ marginRight: 8, background: aba === 'compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Compras</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'compras') && (<button onClick={() => setAba('anuncio-compras')} style={{ marginRight: 8, background: aba === 'anuncio-compras' ? '#6d28d9' : '#8b5cf6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio Compras</button>)}
-          {/* VENDAS - 3 abas */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (<button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-vendas') }} style={{ marginRight: 8, background: aba === 'perfil-vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Vendas</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (<button onClick={() => setAba('vendas')} style={{ marginRight: 8, background: aba === 'vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Vendas</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (<button onClick={() => setAba('anuncio-vendas')} style={{ marginRight: 8, background: aba === 'anuncio-vendas' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio Vendas</button>)}
-          {/* MARKETING - 2 abas  */}
           {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (<button onClick={() => { if (idPessoaLogada) carregarPerfil(idPessoaLogada); setAba('perfil-marketing') }} style={{ marginRight: 8, background: aba === 'perfil-marketing' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Perfil Marketing</button>)}
           {(tipoUsuario === 'admin' || tipoUsuario === 'marketing') && (<button onClick={() => setAba('anuncio-marketing')} style={{ marginRight: 8, background: aba === 'anuncio-marketing' ? '#be185d' : '#ec4899', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>📣 Anúncio Marketing</button>)}
-          {/* ADMIN + SAIR */}
           {tipoUsuario === 'admin' && (<button onClick={() => setAba('admin')} style={{ marginRight: 8, background: aba === 'admin' ? '#1d4ed8' : '#3b82f6', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Admin</button>)}
           <button onClick={sair} style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Sair</button>
         </div>
       )}
-
-      {/* ============================================================
-                    TELA LOGIN - decide pra qual aba vai
-          ============================================================ */}
       {aba === 'login' && (
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <h2>Login</h2>
@@ -279,15 +283,7 @@ useEffect(() => { carregarMetaVendas() }, [aba])
           }}>Entrar</button>
         </div>
       )}
-
-      {/* ============================================================
-          PAGINAS - UMA EMBAIXO DA OUTRA!
-          ============================================================ */}
-
-      {/*  MEU PERFIL - so admin */}
       {aba === 'perfil' && (<div><h2 style={{ textAlign: 'center' }}>👤 Meu Perfil</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #14b8a6' }} /><h3>{nomeLogado}</h3><p style={{ color: '#5eead4', fontWeight: 700 }}>{cargoPerfil || tipoUsuario}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>📸 {instaPerfil}</p>}{whatsPerfil && <p>📱 {whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informações</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> {pessoaLogada?.setor || tipoUsuario}</p><p><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p></div></div></div>)}
-
-      {/* ADMIN - Dashboard + Leads + Acessos + Cadastro + Editar Perfil + Lista */}
       {aba === 'admin' && (
         <div>
           <h2 style={{ textAlign: 'center' }}>📊 Dashboard</h2>
@@ -328,218 +324,128 @@ useEffect(() => { carregarMetaVendas() }, [aba])
           {mensagem && <p style={{ textAlign: 'center', background: mensagem.includes('sucesso') ? '#22c55e' : '#ef4444', padding: 10, borderRadius: 8 }}>{mensagem}</p>}
           <p style={{ textAlign: 'center' }}>Mostrando {pessoasDaPagina.length} de {pessoasFiltradas.length}</p>
           <div style={{ textAlign: 'center' }}><button onClick={() => setOrdenarPorNome(!ordenarPorNome)}>{ordenarPorNome ? 'Ordenado A-Z' : 'Ordenar A-Z'}</button><button onClick={limparTudo} style={{ marginLeft: 8, background: '#ef4444', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Limpar Tudo</button></div>
-        {carregando ? <p style={{ textAlign: 'center' }}>Carregando...</p> : <ul style={{ padding: 0 }}>{pessoasDaPagina.map((p) => (<li key={p.id} style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}><span>{p.nome} - {p.email} {p.usuario && <span> - @{p.usuario}</span>} <span style={{ background: corSetor(p.setor), padding: '2px 8px', borderRadius: 20, fontSize: 11 }}>{p.setor || 'admin'}</span></span><span><button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, marginRight: 6, cursor: 'pointer' }}>Editar</button><button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Deletar</button></span></li>))}</ul>}          <div style={{ textAlign: 'center' }}><button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>Anterior</button><span> Pagina {pagina} de {totalPaginas} </span><button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas}>Proxima</button></div>
+          {carregando ? <p style={{ textAlign: 'center' }}>Carregando...</p> : <ul style={{ padding: 0 }}>{pessoasDaPagina.map((p) => (<li key={p.id} style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', listStyle: 'none' }}><span>{p.nome} - {p.email} {p.usuario && <span> - @{p.usuario}</span>} <span style={{ background: corSetor(p.setor), padding: '2px 8px', borderRadius: 20, fontSize: 11 }}>{p.setor || 'admin'}</span></span><span><button onClick={() => comecarEditar(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, marginRight: 6, cursor: 'pointer' }}>Editar</button><button onClick={() => deletar(p.id, p.nome)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Deletar</button></span></li>))}</ul>}
+          <div style={{ textAlign: 'center' }}><button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>Anterior</button><span> Pagina {pagina} de {totalPaginas} </span><button onClick={() => setPagina(pagina + 1)} disabled={pagina === totalPaginas}>Proxima</button></div>
         </div>
       )}
-      {/* FIM DO ADMIN */}
-
-      {/* PERFIL VENDAS - FORA DO ADMIN (correcao do erro admin x perfil-vendas) */}
       {aba === 'perfil-vendas' && (
-        <div><h2 style={{ textAlign: 'center' }}>Perfil Vendas</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #22c55e' }} /><h3>{nomeLogado}</h3><p style={{ color: '#86efac', fontWeight: 700 }}>{cargoPerfil || 'Vendas'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>📸 {instaPerfil}</p>}{whatsPerfil && <p>📱 {whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informações - Vendas</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Vendas</p><p><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p><div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}><h4>📌 Em breve aqui</h4><p style={{ color: '#9ca3af', fontSize: 13 }}>Metas, comissões, etc.</p></div></div></div></div>
+        <div><h2 style={{ textAlign: 'center' }}>Perfil Vendas</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você só vê. Quem edita é só o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #22c55e' }} /><h3>{nomeLogado}</h3><p style={{ color: '#86efac', fontWeight: 700 }}>{cargoPerfil || 'Vendas'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>📸 {instaPerfil}</p>}{whatsPerfil && <p>📱 {whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informações - Vendas</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Vendas</p><p><b>Usuário:</b> @{pessoaLogada?.usuario || usuario}</p></div></div></div>
       )}
-
-      {/* PERFIL COMPRAS */}
       {aba === 'perfil-compras' && (
-        <div><h2 style={{ textAlign: 'center' }}>Perfil Compras</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #8b5cf6' }} /><h3>{nomeLogado}</h3><p style={{ color: '#c4b5fd', fontWeight: 700 }}>{cargoPerfil || 'Compras'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>{instaPerfil}</p>}{whatsPerfil && <p>{whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informacoes - Compras</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Compras</p><p><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p><div style={{ background: '#1f2028', padding: 14, borderRadius: 10, marginTop: 16 }}><h4>Em breve aqui</h4><p style={{ color: '#9ca3af', fontSize: 13 }}>Pedidos, fornecedores, etc.</p></div></div></div></div>
+        <div><h2 style={{ textAlign: 'center' }}>Perfil Compras</h2><p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui voce so ve. Quem edita e so o admin.</p><div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}><div style={{ background: '#1f2028', padding: 24, borderRadius: 12, width: 320, textAlign: 'center' }}><img src={perfil?.foto || fotoPerfil || '/desenho.webp'} alt="Foto" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '3px solid #8b5cf6' }} /><h3>{nomeLogado}</h3><p style={{ color: '#c4b5fd', fontWeight: 700 }}>{cargoPerfil || 'Compras'}</p>{bioPerfil && <p>{bioPerfil}</p>}{instaPerfil && <p>{instaPerfil}</p>}{whatsPerfil && <p>{whatsPerfil}</p>}</div><div style={{ background: '#2e303a', padding: 20, borderRadius: 12, flex: 1, minWidth: 280 }}><h3>Minhas informacoes - Compras</h3><p><b>Nome:</b> {pessoaLogada?.nome || nomeLogado}</p><p><b>Email:</b> {pessoaLogada?.email || '-'}</p><p><b>Telefone:</b> {pessoaLogada?.telefone || '-'}</p><p><b>Setor:</b> Compras</p><p><b>Usuario:</b> @{pessoaLogada?.usuario || usuario}</p></div></div></div>
       )}
-
-      {/* COMPRAS - so a lista */}
       {aba === 'compras' && <ListaSetor lista={pessoasCompras} titulo="Setor de Compras" />}
-
-            {/* ========== DASHBOARD VENDAS + TABELA DE PRODUTOS ========== */}
       {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && aba === 'vendas' && (
         <div>
-          {/* TITULO */}
           <h2 style={{ textAlign: 'center' }}>💰 Dashboard Vendas</h2>
           <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>Aqui você vê quanto tem pra vender, se bateu a meta e o que está acabando!</p>
-
-          {/* ===== CARDS DE CIMA ===== */}
-          {/* Calcula tudo aqui em cima pra usar nos cards */}
           {(() => {
             const totalEstoque = produtos.reduce((soma, p) => soma + (Number(p.preco) * Number(p.quantidade)), 0)
             const totalQtd = produtos.reduce((soma, p) => soma + Number(p.quantidade), 0)
             const maisCaro = produtos.length > 0 ? produtos.reduce((a, b) => Number(a.preco) > Number(b.preco) ? a : b) : null
             const maisBarato = produtos.length > 0 ? produtos.reduce((a, b) => Number(a.preco) < Number(b.preco) ? a : b) : null
             const quaseAcabando = produtos.filter(p => Number(p.quantidade) < 5)
-            const faltaMeta = Math.max(0, metaVendas - vendidoVendas)
-            const pctMeta = metaVendas > 0 ? Math.min(100, Math.round((vendidoVendas / metaVendas) * 100)) : 0
-
             return (
               <>
-                {/* - CARDS */}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                   <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #22c55e' }}>
-                    <div style={{ fontSize: 26 }}>💰</div>
-                    <div style={{ fontSize: 22, fontWeight: 800 }}>R$ {totalEstoque.toFixed(2)}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Faturamento se vender tudo</div>
+                    <div style={{ fontSize: 26 }}>💰</div><div style={{ fontSize: 22, fontWeight: 800 }}>R$ {totalEstoque.toFixed(2)}</div><div style={{ fontSize: 12, color: '#9ca3af' }}>Faturamento se vender tudo</div>
                   </div>
                   <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #3b82f6' }}>
-                    <div style={{ fontSize: 26 }}>📦</div>
-                    <div style={{ fontSize: 22, fontWeight: 800 }}>{produtos.length} produtos / {totalQtd} unid.</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Total em estoque</div>
+                    <div style={{ fontSize: 26 }}>📦</div><div style={{ fontSize: 22, fontWeight: 800 }}>{produtos.length} produtos / {totalQtd} unid.</div><div style={{ fontSize: 12, color: '#9ca3af' }}>Total em estoque</div>
                   </div>
                   <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #f59e0b' }}>
-                    <div style={{ fontSize: 26 }}>🏆</div>
-                    <div style={{ fontSize: 16, fontWeight: 800 }}>{maisCaro ? `${maisCaro.nome} - R$ ${maisCaro.preco}` : '-'}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Produto mais caro</div>
+                    <div style={{ fontSize: 26 }}>🏆</div><div style={{ fontSize: 16, fontWeight: 800 }}>{maisCaro ? `${maisCaro.nome} - R$ ${maisCaro.preco}` : '-'}</div><div style={{ fontSize: 12, color: '#9ca3af' }}>Produto mais caro</div>
                   </div>
                   <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, flex: 1, minWidth: 160, textAlign: 'center', border: '1px solid #ec4899' }}>
-                    <div style={{ fontSize: 26 }}>🔥</div>
-                    <div style={{ fontSize: 16, fontWeight: 800 }}>{maisBarato ? `${maisBarato.nome} - R$ ${maisBarato.preco}` : '-'}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Produto mais barato</div>
+                    <div style={{ fontSize: 26 }}>🔥</div><div style={{ fontSize: 16, fontWeight: 800 }}>{maisBarato ? `${maisBarato.nome} - R$ ${maisBarato.preco}` : '-'}</div><div style={{ fontSize: 12, color: '#9ca3af' }}>Produto mais barato</div>
                   </div>
                 </div>
-
-                {/* META DO MÊS - ADMIN EDITA, VENDAS SÓ VÊ */}
-<div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #22c55e' }}>
-  <h3 style={{ margin: '0 0 8px 0', textAlign: 'center' }}>🎯 Meta do mês</h3>
-
-  {/* SE FOR ADMIN, MOSTRA OS CONTROLES */}
-  {tipoUsuario === 'admin' && (
-    <div style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 12 }}>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
-        <label style={{ color: '#e5e7eb', fontSize: 13 }}>Nova meta R$
-          <input type="number" value={novaMeta} onChange={(e) => setNovaMeta(e.target.value)} placeholder={String(metaVendas)} style={{ width: 100, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563', marginLeft: 4 }} />
-        </label>
-        <button onClick={async () => {
-          await fetch('http://localhost:3001/meta-vendas', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: Number(novaMeta), tipo: tipoUsuario }) })
-          setNovaMeta(''); carregarMetaVendas()
-        }} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Salvar meta</button>
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <select 
-          value={vendaVendedorId} 
-          onChange={(e) => { 
-            console.log('Escolheu vendedor:', e.target.value); // ✅ Pra ver no F12 se salvou!
-            setVendaVendedorId(e.target.value) 
-          }} 
-          style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', fontWeight: 600 }}
-        >
-          <option value="">Quem vendeu?</option>
-          {pessoas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin').map(p => (
-            <option key={p.id} value={p.id}>{p.nome} - @{p.usuario}</option>
-          ))}
-        </select>
-        
-        <select value={vendaProdutoId} onChange={(e) => setVendaProdutoId(e.target.value)} style={{ padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff' }}>
-          <option value="">Escolhe o produto vendido...</option>
-          {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} - R$ {p.preco} ({p.quantidade} em estoque)</option>)}
-        </select>
-        <input type="number" value={vendaQtd} onChange={(e) => setVendaQtd(e.target.value)} min="1" style={{ width: 60, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563' }} />
-<button onClick={async () => {
-
-
-  //  Eele vai ver o vendedor primeiro depois o produto
-  if (!vendaVendedorId) { alert('Escolhe quem vendeu!'); return }
-  if (!vendaProdutoId) { alert('Escolhe o produto!'); return }
-
-  const vendedor = pessoas.find(p => p.id === Number(vendaVendedorId))
-  console.log('Mandando pro backend:', { vendedor_id: Number(vendaVendedorId), produto_id: Number(vendaProdutoId) });
-
-  const res = await fetch('http://localhost:3001/vendas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto_id: Number(vendaProdutoId), quantidade: Number(vendaQtd), vendedor_id: Number(vendaVendedorId), vendedor_nome: vendedor?.nome || '', tipo: tipoUsuario }) })
-  const data = await res.json()
-  if (!res.ok) { alert('Erro do backend: ' + data.erro); return }
-
-  alert(`Venda registrada! ${vendedor?.nome} vendeu - R$ ${data.valorTotal}`);
-
-  //  Limpa TUDO e recarrega com await!
-  setVendaVendedorId(''); setVendaProdutoId(''); setVendaQtd('1');
-  await carregarMetaVendas()
-  const resP = await fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`)
-  const dadosP = await resP.json()
-  setProdutos(dadosP)
-}} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Registrar venda</button>      </div>
-    </div>
-  )}
-
-  {/* BARRA DE PROGRESSO */} 
-  {(() => {
-    const faltaMeta = Math.max(0, metaVendas - vendidoVendas)
-    const pctMeta = metaVendas > 0 ? Math.min(100, Math.round((vendidoVendas / metaVendas) * 100)) : 0
-    return (<>
-      <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>Meta: <b>R$ {metaVendas.toFixed(2)}</b> | Já vendido: <b style={{ color: '#22c55e' }}>R$ {vendidoVendas.toFixed(2)}</b></p>
-      <div style={{ background: '#2e303a', height: 22, borderRadius: 20, overflow: 'hidden' }}>
-        <div style={{ width: `${pctMeta}%`, background: pctMeta >= 100 ? '#22c55e' : '#f59e0b', height: '100%', textAlign: 'center', color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: '22px' }}>{pctMeta}%</div>
-      </div>
-      <p style={{ textAlign: 'center', margin: '8px 0 0 0', color: '#e5e7eb', fontSize: 13 }}>
-        {pctMeta >= 100 ? '🎉 Meta batida! Parabéns!' : `Falta R$ ${faltaMeta.toFixed(2)} pra bater a meta!`}
-        {tipoUsuario === 'vendas' && <><br /><span style={{ color: '#9ca3af', fontSize: 12 }}>A meta e as vendas são definidas pelo admin, aqui é só visualização! 👀</span></>}
-      </p>
-    </>)
-  })()}
-
-  {/* ÚLTIMAS VENDAS */}
-  {ultimasVendas.length > 0 && (
-    <div style={{ marginTop: 12 }}>
-      <h4 style={{ textAlign: 'center' }}>🧾 Últimas vendas</h4>
-      <ul style={{ padding: 0 }}>{ultimasVendas.slice(0, 5).map(v => (
-        <li key={v.id} style={{ background: '#2e303a', padding: 8, borderRadius: 8, marginBottom: 6, listStyle: 'none', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-  <span><b>{v.vendedor_nome || 'Sem vendedor'}</b> vendeu {v.quantidade}x {v.produto_nome}</span><span><b>R$ {Number(v.valor_total).toFixed(2)}</b> - {new Date(v.criado_em).toLocaleDateString('pt-BR')}</span>
-</li>))}</ul>
-    </div>
-  )}
-</div>
-
-                {/*  - ALERTA ESTOQUE BAIXO */}
+                <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #22c55e' }}>
+                  <h3 style={{ margin: '0 0 8px 0', textAlign: 'center' }}>🎯 Meta do mês</h3>
+                  {tipoUsuario === 'admin' && (
+                    <div style={{ background: '#2e303a', padding: 12, borderRadius: 10, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                        <label style={{ color: '#e5e7eb', fontSize: 13 }}>Nova meta R$
+                          <input type="number" value={novaMeta} onChange={(e) => setNovaMeta(e.target.value)} placeholder={String(metaVendas)} style={{ width: 100, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563', marginLeft: 4 }} />
+                        </label>
+                        <button onClick={async () => {
+                          await fetch('http://localhost:3001/meta-vendas', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: Number(novaMeta), tipo: tipoUsuario }) })
+                          setNovaMeta(''); carregarMetaVendas()
+                        }} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer' }}>Salvar meta</button>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <select value={vendaVendedorId} onChange={(e) => setVendaVendedorId(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', fontWeight: 600 }}>
+                          <option value="">Quem vendeu?</option>
+                          {pessoas.filter(p => (p.setor || 'admin') === 'vendas' || (p.setor || 'admin') === 'admin').map(p => (
+                            <option key={p.id} value={p.id}>{p.nome} - @{p.usuario}</option>
+                          ))}
+                        </select>
+                        <select value={vendaProdutoId} onChange={(e) => setVendaProdutoId(e.target.value)} style={{ padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff' }}>
+                          <option value="">Escolhe o produto vendido...</option>
+                          {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} - R$ {p.preco} ({p.quantidade} em estoque)</option>)}
+                        </select>
+                        <input type="number" value={vendaQtd} onChange={(e) => setVendaQtd(e.target.value)} min="1" style={{ width: 60, padding: 6, borderRadius: 6, background: '#1f2028', color: '#fff', border: '1px solid #4b5563' }} />
+                        <button onClick={async () => {
+                          if (!vendaVendedorId) { alert('Escolhe quem vendeu!'); return }
+                          if (!vendaProdutoId) { alert('Escolhe o produto!'); return }
+                          const vendedor = pessoas.find(p => p.id === Number(vendaVendedorId))
+                          const res = await fetch('http://localhost:3001/vendas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto_id: Number(vendaProdutoId), quantidade: Number(vendaQtd), vendedor_id: Number(vendaVendedorId), vendedor_nome: vendedor?.nome || '', tipo: tipoUsuario }) })
+                          const data = await res.json()
+                          if (!res.ok) { alert('Erro do backend: ' + data.erro); return }
+                          alert(`Venda registrada! ${vendedor?.nome} vendeu - R$ ${data.valorTotal}`);
+                          setVendaVendedorId(''); setVendaProdutoId(''); setVendaQtd('1');
+                          await carregarMetaVendas()
+                          carregarProdutos()
+                        }} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Registrar venda</button>
+                      </div>
+                    </div>
+                  )}
+                  {(() => {
+                    const faltaMeta = Math.max(0, metaVendas - vendidoVendas)
+                    const pctMeta = metaVendas > 0 ? Math.min(100, Math.round((vendidoVendas / metaVendas) * 100)) : 0
+                    return (<>
+                      <p style={{ textAlign: 'center', color: '#e5e7eb', fontSize: 14 }}>Meta: <b>R$ {metaVendas.toFixed(2)}</b> | Já vendido: <b style={{ color: '#22c55e' }}>R$ {vendidoVendas.toFixed(2)}</b></p>
+                      <div style={{ background: '#2e303a', height: 22, borderRadius: 20, overflow: 'hidden' }}>
+                        <div style={{ width: `${pctMeta}%`, background: pctMeta >= 100 ? '#22c55e' : '#f59e0b', height: '100%', textAlign: 'center', color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: '22px' }}>{pctMeta}%</div>
+                      </div>
+                      <p style={{ textAlign: 'center', margin: '8px 0 0 0', color: '#e5e7eb', fontSize: 13 }}>
+                        {pctMeta >= 100 ? '🎉 Meta batida! Parabéns!' : `Falta R$ ${faltaMeta.toFixed(2)} pra bater a meta!`}
+                        {tipoUsuario === 'vendas' && <><br /><span style={{ color: '#9ca3af', fontSize: 12 }}>A meta e as vendas são definidas pelo admin, aqui é só visualização! 👀</span></>}
+                      </p>
+                    </>)
+                  })()}
+                  {ultimasVendas.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      <h4 style={{ textAlign: 'center' }}>🧾 Últimas vendas</h4>
+                      <ul style={{ padding: 0 }}>{ultimasVendas.slice(0, 5).map(v => (
+                        <li key={v.id} style={{ background: '#2e303a', padding: 8, borderRadius: 8, marginBottom: 6, listStyle: 'none', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                          <span><b>{v.vendedor_nome || 'Sem vendedor'}</b> vendeu {v.quantidade}x {v.produto_nome}</span><span><b>R$ {Number(v.valor_total).toFixed(2)}</b> - {new Date(v.criado_em).toLocaleDateString('pt-BR')}</span>
+                        </li>))}</ul>
+                    </div>
+                  )}
+                </div>
                 {quaseAcabando.length > 0 && (
                   <div style={{ background: '#7f1d1d', padding: 14, borderRadius: 12, marginBottom: 12, textAlign: 'center' }}>
-                    <b>⚠️ Atenção! {quaseAcabando.length} produto(s) quase acabando:</b>
-                    <br />
+                    <b>⚠ Atenção! {quaseAcabando.length} produto(s) quase acabando:</b><br />
                     <span style={{ fontSize: 13 }}>{quaseAcabando.map(p => `${p.nome} (${p.quantidade} unid.)`).join(' • ')}</span>
                   </div>
                 )}
               </>
             )
           })()}
-
-          {/* =====CADASTRAR PRODUTO NOVO ====*/}
           {(tipoUsuario === 'admin' || tipoUsuario === 'vendas') && (
             <div style={{ background: '#1f2028', padding: 16, borderRadius: 12, marginBottom: 12, border: '1px solid #3b82f6' }}>
-            <h3 style={{ margin: '0 0 10px 0', textAlign: 'center' }}> Cadastrar Produto Novo</h3>
-
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <input placeholder="Nome do produto" value={novoProdutoNome} onChange={(e) => setNovoProdutoNome(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563', minWidth: 200}} />
-              <input placeholder="Preço" value={novoProdutoPreco} onChange={(e) => setNovoProdutoPreco(e.target.value)} style={{ width: 110, padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563'}} />
-              <input placeholder="Qtd" value={novoProdutoQtd} onChange={(e) => setNovoProdutoQtd(e.target.value)} style={{ width: 70, padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563'}} />
-              <input placeholder="Descrição" value={novoProdutoDescricao} onChange={(e) => setNovoProdutoDescricao(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563', minWidth: 100}} />
-            
-            <button onClick ={async () => {
-              if (!novoProdutoNome.trim()) { alert('Coloca o nome do produto!'); return}
-              if (!novoProdutoPreco.trim()) { alert('Coloca o preço!'); return}
-              if (!novoProdutoQtd.trim()) { alert('Coloca a quantidade'); return}
-
-            const res = await fetch('http://localhost:3001/produtos', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                nome: novoProdutoNome.trim(),
-                preco: Number(novoProdutoPreco),
-                quantidade: Number(novoProdutoQtd),
-                descricao: novoProdutoDescricao.trim(),
-                setor: 'vendas',
-                tipo: tipoUsuario
-              })
-            })
-          const data = await res.json()
-          console.log('Resposta do backend', data);
-          if (!res.ok) {alert('Erro: ' + data.erro); return}
-
-            alert(`{Produto ${data.nome} cadastrado!`)
-            setNovoProdutoNome(''); setNovoProdutoPreco(''); setNovoProdutoQtd(''); setNovoProdutoDescricao('')
-
-          const resP = await fetch(`http://localhost:3001/produtos?tipo=${tipoUsuario}`)
-          const dadosP = await resP.json()
-          setProdutos(dadosP)
-        }} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
-          Cadastrar produto
-        </button>
-      </div>
-    </div>
-  )}
-
-
-          {/* ===== TABELA DE PRODUTOS - */}
+              <h3 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Cadastrar Produto Novo</h3>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <input placeholder="Nome do produto" value={novoProdutoNome} onChange={(e) => setNovoProdutoNome(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563', minWidth: 200 }} />
+                <input placeholder="Preço" value={novoProdutoPreco} onChange={(e) => setNovoProdutoPreco(e.target.value)} style={{ width: 110, padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563' }} />
+                <input placeholder="Qtd" value={novoProdutoQtd} onChange={(e) => setNovoProdutoQtd(e.target.value)} style={{ width: 70, padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563' }} />
+                <input placeholder="Descrição" value={novoProdutoDescricao} onChange={(e) => setNovoProdutoDescricao(e.target.value)} style={{ padding: 10, borderRadius: 8, background: '#2e303a', color: '#fff', border: '1px solid #4b5563', minWidth: 100 }} />
+                <button onClick={cadastrarProduto} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cadastrar produto</button>
+              </div>
+            </div>
+          )}
           <h3>Controle de Produtos - Time de Vendas</h3>
           {produtos.length === 0 ? (
             <p style={{ color: '#9ca3af' }}>Nenhum produto ainda.</p>
@@ -554,6 +460,7 @@ useEffect(() => { carregarMetaVendas() }, [aba])
                   <th style={{ padding: 8, border: '1px solid #030303' }}>Descrição</th>
                   <th style={{ padding: 8, border: '1px solid #030303' }}>Total</th>
                   <th style={{ padding: 8, border: '1px solid #030303' }}>Status</th>
+                  {tipoUsuario === 'admin' && <th style={{ padding: 8, border: '1px solid #030303' }}>Ações</th>}
                 </tr>
               </thead>
               <tbody>
@@ -567,9 +474,15 @@ useEffect(() => { carregarMetaVendas() }, [aba])
                     <td style={{ padding: 8, border: '1px solid #030303' }}>R$ {(Number(p.preco) * Number(p.quantidade)).toFixed(2)}</td>
                     <td style={{ padding: 8, border: '1px solid #030303' }}>
                       {Number(p.quantidade) === 0 ? <span style={{ background: '#ef4444', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>ESGOTADO</span>
-                      : Number(p.quantidade) < 5 ? <span style={{ background: '#f59e0b', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>QUASE ACABANDO</span>
-                      : <span style={{ background: '#22c55e', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>EM ESTOQUE</span>}
+                        : Number(p.quantidade) < 5 ? <span style={{ background: '#f59e0b', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>QUASE ACABANDO</span>
+                          : <span style={{ background: '#22c55e', padding: '4px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>EM ESTOQUE</span>}
                     </td>
+                    {tipoUsuario === 'admin' && (
+                      <td style={{ padding: 8, border: '1px solid #030303' }}>
+                        <button onClick={() => editarProduto(p)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, marginRight: 6, cursor: 'pointer' }}>Editar</button>
+                        <button onClick={() => excluirProduto(p.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Excluir</button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -577,8 +490,6 @@ useEffect(() => { carregarMetaVendas() }, [aba])
           )}
         </div>
       )}
-
-      {/* ANUNCIO MARKETING  */}
       {(aba === 'anuncio' || aba === 'anuncio-marketing') && (
         <div>
           <div onClick={() => window.open('https://www.youtube.com/', '_blank')} style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', borderRadius: 12, cursor: 'pointer', backgroundImage: 'url(/marketing.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
